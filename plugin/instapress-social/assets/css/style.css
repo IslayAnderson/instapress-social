@@ -523,3 +523,6 @@ body.email-modal-open { overflow: hidden; }
 /* Turnstile: invisible unless Cloudflare asks for a check, then shown above everything. */
 .ts-challenge { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 500; }
 .ts-challenge:empty, .ts-challenge > div:not(:has(iframe[style*="visibility: visible"])) { pointer-events: none; }
+
+/* reCAPTCHA badge: clear of the mobile bottom bar. */
+@media (max-width: 767px) { .grecaptcha-badge { bottom: 66px !important; } }

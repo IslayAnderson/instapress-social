@@ -291,56 +291,82 @@
   });
 
   /* ----------------------------------------------------------------------
-     Cloudflare Turnstile: one invisible widget per action ("comment", "like"),
-     executed on demand. Tokens are single-use, so each request resets and
-     re-executes its widget. A challenge only appears if Cloudflare needs one.
+     Bot check: Cloudflare Turnstile, Google reCAPTCHA v3 or v2 (invisible).
+     captchaToken(action) resolves with a fresh single-use token for each
+     protected request ("comment", "like"), or '' when no check is on.
+     A visible challenge only appears if the provider asks for one.
      ---------------------------------------------------------------------- */
-  var TS = CFG.turnstile || null;
-  var tsWidgets = {}, tsPending = {}, tsBox = null;
+  var CAP = CFG.captcha || null;
+  var capWidgets = {}, capPending = {}, capBox = null;
+  var CAP_FAIL = 'Couldn\'t confirm you\'re human — please try again.';
 
-  function whenTurnstile() {
+  function waitFor(test, what) {
     return new Promise(function (resolve, reject) {
       var t0 = Date.now();
       (function poll() {
-        if (window.turnstile && window.turnstile.render) return resolve(window.turnstile);
-        if (Date.now() - t0 > 15000) return reject(new Error('Bot check didn\'t load — check your connection and try again.'));
+        var v = test();
+        if (v) return resolve(v);
+        if (Date.now() - t0 > 15000) return reject(new Error(what + ' didn\'t load — check your connection and try again.'));
         setTimeout(poll, 100);
       })();
     });
   }
 
-  function turnstileToken(action) {
-    if (!TS || !TS[action]) return Promise.resolve('');
-    return whenTurnstile().then(function (ts) {
-      return new Promise(function (resolve, reject) {
-        if (!tsBox) {
-          tsBox = document.createElement('div');
-          tsBox.className = 'ts-challenge';
-          document.body.appendChild(tsBox);
-        }
-        var timer = setTimeout(function () { fail(new Error('The bot check timed out — please try again.')); }, 60000);
-        function done(token) { clearTimeout(timer); delete tsPending[action]; resolve(token); }
-        function fail(err) { clearTimeout(timer); delete tsPending[action]; reject(err); }
-        tsPending[action] = { done: done, fail: fail };
+  function challengeBox() {
+    if (!capBox) {
+      capBox = document.createElement('div');
+      capBox.className = 'ts-challenge';
+      document.body.appendChild(capBox);
+    }
+    return capBox;
+  }
 
-        if (tsWidgets[action] === undefined) {
-          var el = document.createElement('div');
-          tsBox.appendChild(el);
-          tsWidgets[action] = ts.render(el, {
-            sitekey: TS.sitekey,
-            action: action,
-            execution: 'execute',
-            appearance: 'interaction-only',
-            callback: function (token) { tsPending[action] && tsPending[action].done(token); },
-            'error-callback': function () { tsPending[action] && tsPending[action].fail(new Error('Couldn\'t confirm you\'re human — please try again.')); return true; },
-            'expired-callback': function () {},
-          });
-        } else {
-          ts.reset(tsWidgets[action]);
-        }
-        ts.execute(tsWidgets[action]);
-      });
+  // Turnstile and reCAPTCHA v2 (invisible): one widget per key, reset + execute per request.
+  function widgetToken(api, key, renderOpts) {
+    return new Promise(function (resolve, reject) {
+      var timer = setTimeout(function () { fail(new Error('The bot check timed out — please try again.')); }, 120000);
+      function done(token) { clearTimeout(timer); delete capPending[key]; resolve(token); }
+      function fail(err) { clearTimeout(timer); delete capPending[key]; reject(err); }
+      capPending[key] = { done: done, fail: fail };
+      if (capWidgets[key] === undefined) {
+        var el = document.createElement('div');
+        challengeBox().appendChild(el);
+        capWidgets[key] = api.render(el, Object.assign({
+          callback: function (token) { capPending[key] && capPending[key].done(token); },
+          'error-callback': function () { capPending[key] && capPending[key].fail(new Error(CAP_FAIL)); return true; },
+          'expired-callback': function () {},
+        }, renderOpts));
+      } else {
+        api.reset(capWidgets[key]);
+      }
+      api.execute(capWidgets[key]);
     });
+  }
+
+  function captchaToken(action) {
+    if (!CAP || !CAP[action]) return Promise.resolve('');
+    if (CAP.provider === 'turnstile') {
+      return waitFor(function () { return window.turnstile && window.turnstile.render && window.turnstile; }, 'The bot check')
+        .then(function (ts) {
+          return widgetToken(ts, 'ts-' + action, { sitekey: CAP.sitekey, action: action, execution: 'execute', appearance: 'interaction-only' });
+        });
+    }
+    if (CAP.provider === 'recaptcha_v3') {
+      return waitFor(function () { return window.grecaptcha && window.grecaptcha.execute && window.grecaptcha; }, 'reCAPTCHA')
+        .then(function (g) {
+          return new Promise(function (resolve, reject) {
+            g.ready(function () { g.execute(CAP.sitekey, { action: action }).then(resolve, function () { reject(new Error(CAP_FAIL)); }); });
+          });
+        });
+    }
+    if (CAP.provider === 'recaptcha_v2') {
+      // v2 has no actions, so one invisible widget serves both comments and likes.
+      return waitFor(function () { return window.grecaptcha && window.grecaptcha.render && window.grecaptcha; }, 'reCAPTCHA')
+        .then(function (g) {
+          return widgetToken(g, 'rc2', { sitekey: CAP.sitekey, size: 'invisible', badge: 'bottomright' });
+        });
+    }
+    return Promise.resolve('');
   }
 
   /* ----------------------------------------------------------------------
@@ -397,13 +423,13 @@
     setLikes(scope, before + (was ? -1 : 1));
     if (!was) { btn.classList.remove('is-pop'); void btn.offsetWidth; btn.classList.add('is-pop'); }
 
-    turnstileToken('like')
+    captchaToken('like')
       .then(function (token) {
         var body = new FormData();
         body.append('action', 'iar_like');
         body.append('post_id', id);
         body.append('vid', visitorId());
-        if (token) body.append('cf-turnstile-response', token);
+        if (token) body.append('captcha_token', token);
         return fetch(CFG.ajax, { method: 'POST', body: body, credentials: 'same-origin' });
       })
       .then(function (r) { return r.json(); })
@@ -587,11 +613,11 @@
     }
     btn.disabled = true;
     msg.hidden = true;
-    turnstileToken('comment')
+    captchaToken('comment')
       .then(function (token) {
         var body = new FormData(form);
         body.append('action', 'iar_post_comment');
-        if (token) body.append('cf-turnstile-response', token);
+        if (token) body.append('captcha_token', token);
         return fetch(CFG.ajax, { method: 'POST', body: body, credentials: 'same-origin' });
       })
       .then(function (r) { return r.json(); })

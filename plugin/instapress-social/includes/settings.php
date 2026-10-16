@@ -23,7 +23,11 @@ function iar_defaults() {
 		'share_plugin'    => 1,
 		'allow_comments'  => 1,
 		'allow_likes'     => 1,
+		'captcha_provider' => '',
 		'ts_sitekey'      => '',
+		'rc3_sitekey'     => '',
+		'rc2_sitekey'     => '',
+		'rc3_threshold'   => 0.5,
 		'ts_comments'     => 1,
 		'ts_likes'        => 1,
 		'story_hours'     => 24,
@@ -66,7 +70,11 @@ add_action( 'admin_init', function () {
 				'share_plugin'   => empty( $in['share_plugin'] ) ? 0 : 1,
 				'allow_comments' => empty( $in['allow_comments'] ) ? 0 : 1,
 				'allow_likes'    => empty( $in['allow_likes'] ) ? 0 : 1,
+				'captcha_provider' => in_array( $in['captcha_provider'] ?? '', array( 'off', 'turnstile', 'recaptcha_v3', 'recaptcha_v2' ), true ) ? $in['captcha_provider'] : 'off',
 				'ts_sitekey'     => preg_replace( '/[^A-Za-z0-9_\-]/', '', (string) ( $in['ts_sitekey'] ?? '' ) ),
+				'rc3_sitekey'    => preg_replace( '/[^A-Za-z0-9_\-]/', '', (string) ( $in['rc3_sitekey'] ?? '' ) ),
+				'rc2_sitekey'    => preg_replace( '/[^A-Za-z0-9_\-]/', '', (string) ( $in['rc2_sitekey'] ?? '' ) ),
+				'rc3_threshold'  => max( 0.1, min( 1.0, round( (float) ( $in['rc3_threshold'] ?? 0.5 ), 1 ) ) ),
 				'ts_comments'    => empty( $in['ts_comments'] ) ? 0 : 1,
 				'ts_likes'       => empty( $in['ts_likes'] ) ? 0 : 1,
 				'story_hours'    => max( 1, min( 168, absint( $in['story_hours'] ?? 24 ) ) ),
@@ -219,7 +227,7 @@ function iar_render_settings() {
 				</tr>
 			</table>
 
-			<?php iar_render_turnstile_settings( $s, $name ); ?>
+			<?php iar_render_captcha_settings( $s, $name ); ?>
 
 			<?php submit_button(); ?>
 		</form>

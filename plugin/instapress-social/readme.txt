@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.9.0
+Stable tag: 1.10.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -44,6 +44,11 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.10.0 =
+* Bot protection can now use Google reCAPTCHA v3 (invisible, score-based, with a minimum-score setting) or reCAPTCHA v2 invisible, as well as Cloudflare Turnstile. Choose under Settings → instapress-social → Bot protection; each provider has its own keys. Existing Turnstile setups carry on unchanged.
+* If the provider ever rejects your secret key during real use, an admin warning appears (a wrong secret would otherwise block every comment and like). Google can't confirm reCAPTCHA secrets when you save them, so this is how a mistake shows up.
+* The bot-check script isn't loaded for comment moderators, who are never checked.
 
 = 1.9.0 =
 * Optional Cloudflare Turnstile bot protection for comments and likes (Settings → instapress-social → Bot protection). Usually invisible; a fresh single-use token is checked with Cloudflare for every comment and like, requiring the right action and this site's hostname, and requests are rejected if the check fails or Cloudflare can't be reached. Comment moderators are never challenged.
