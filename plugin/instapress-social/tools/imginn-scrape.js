@@ -41,6 +41,12 @@
   box.innerHTML = '<strong style="display:block;margin-bottom:4px">instapress-social scraper</strong><span></span>';
   document.body.appendChild(box);
   var status = box.querySelector('span');
+  var stopRequested = false;
+  var stopBtn = document.createElement('button');
+  stopBtn.textContent = 'Stop & save';
+  stopBtn.style.cssText = 'display:block;margin-top:8px;padding:4px 10px;border:0;border-radius:6px;background:#444;color:#fff;font:inherit;cursor:pointer';
+  stopBtn.onclick = function () { stopRequested = true; stopBtn.disabled = true; stopBtn.textContent = 'Stopping…'; };
+  box.appendChild(stopBtn);
 
   var DELAY_MS = 1500;              // pause between post fetches
   var STORE = 'igScrape:' + location.pathname;
@@ -65,14 +71,15 @@
   /* ------------------------------------------------------------------ */
   /* 1. Load the whole grid                                              */
   /* ------------------------------------------------------------------ */
+  // Posts, reels and IGTV all have a shortcode; imginn links them as /p/, /reel/ or /tv/.
   function postLinks() {
     var seen = {}, out = [];
-    document.querySelectorAll('a[href*="/p/"]').forEach(function (a) {
-      var m = a.getAttribute('href').match(/\/p\/([A-Za-z0-9_-]+)/);
-      if (!m || seen[m[1]]) return;
-      seen[m[1]] = 1;
+    document.querySelectorAll('a[href*="/p/"], a[href*="/reel/"], a[href*="/reels/"], a[href*="/tv/"]').forEach(function (a) {
+      var m = a.getAttribute('href').match(/\/(p|reels?|tv)\/([A-Za-z0-9_-]{5,})/);
+      if (!m || seen[m[2]]) return;
+      seen[m[2]] = 1;
       var img = a.querySelector('img');
-      out.push({ shortcode: m[1], alt: img ? (img.getAttribute('alt') || '') : '' });
+      out.push({ shortcode: m[2], path: '/' + m[1] + '/' + m[2] + '/', alt: img ? (img.getAttribute('alt') || '') : '' });
     });
     return out;
   }
@@ -85,29 +92,37 @@
     return /k/i.test(m[1]) ? Math.round(n * 1000) : n;
   }
 
+  function loadMoreButton() {
+    return Array.prototype.find.call(
+      document.querySelectorAll('button, a, .load-more, .more'),
+      function (el) { return /load\s*more|show\s*more|more posts/i.test(el.textContent) && el.offsetParent !== null && el !== stopBtn; }
+    );
+  }
+
+  // The header count includes reels and posts imginn doesn't list, so it's only
+  // a hint: stop once there's no "load more" button and nothing new turns up.
   async function loadAll() {
     var expected = expectedCount();
-    log('profile says', expected == null ? '(unknown)' : expected, 'posts');
+    log('profile says', expected == null ? '(unknown)' : expected, 'posts — loading the grid…');
     var stable = 0, last = -1;
-    // Give up after 4 idle rounds — or 15 if we're still short of the header count.
-    while (stable < ((expected && last < expected) ? 15 : 4)) {
-      var btn = Array.prototype.find.call(
-        document.querySelectorAll('button, a, .load-more, .more'),
-        function (el) { return /load\s*more|show\s*more|more posts/i.test(el.textContent) && el.offsetParent !== null; }
-      );
+    while (!stopRequested) {
+      var btn = loadMoreButton();
       if (btn) btn.click();
       // Nudge infinite scroll: up a little, then to the bottom.
       window.scrollBy(0, -600);
       await sleep(300);
       window.scrollTo(0, document.body.scrollHeight);
-      await sleep(stable > 3 ? 4000 : 2000);
+      await sleep(2000);
       var n = postLinks().length;
-      log('grid posts found:', n + (expected ? ' / ' + expected : ''));
       stable = n === last ? stable + 1 : 0;
       last = n;
+      log('grid posts found:', n + (expected ? ' (profile says ' + expected + ')' : ''));
+      // 3 idle rounds with no button = end of the list; with a button still showing, give it a bit longer.
+      if (stable >= (loadMoreButton() ? 6 : 3)) break;
     }
     if (expected && last < expected) {
-      log('⚠ grid stopped at', last, 'of', expected, '— scroll to the bottom manually, then run it again (already-scraped posts are skipped).');
+      log('imginn lists', last, 'of the', expected, 'the profile reports — the rest are usually reels/videos imginn doesn\'t show. Carrying on with', last + '.');
+      await sleep(2500);
     }
   }
 
@@ -241,11 +256,12 @@
 
   for (var i = 0; i < links.length; i++) {
     var p = links[i];
+    if (stopRequested) { log('stopped — saving', Object.keys(state.posts).length, 'posts scraped so far.'); break; }
     if (state.posts[p.shortcode]) continue;
 
     var res, tries = 0;
     while (true) {
-      res = await fetch('/p/' + p.shortcode + '/', { credentials: 'include' });
+      res = await fetch(p.path || ('/p/' + p.shortcode + '/'), { credentials: 'include' });
       if (res.ok || ++tries > 3) break;
       log('HTTP', res.status, 'on', p.shortcode, '— backing off', 10 * tries, 's');
       await sleep(10000 * tries);
@@ -253,7 +269,7 @@
     if (!res.ok) { log('giving up on', p.shortcode, '(run it again later to resume)'); continue; }
 
     var html = await res.text();
-    if (/Just a moment|challenge-platform/i.test(html) && !/\/p\//.test(html.slice(0, 2000))) {
+    if (/Just a moment|challenge-platform/i.test(html) && !/\/(p|reel|tv)\//.test(html.slice(0, 2000))) {
       log('Cloudflare challenge returned — reload the page, pass the check, then run it again to resume.');
       break;
     }
@@ -302,9 +318,15 @@
   var noCap = posts.filter(function (p) { return !p.caption; }).length;
   log('done —', posts.length, 'posts.', noMedia, 'without media,', noCap, 'without caption. posts.json downloaded.');
   window.__igScrapeRunning = false;
+  stopBtn.remove();
   var close = document.createElement('button');
   close.textContent = 'Close';
   close.style.cssText = 'display:block;margin-top:8px;padding:4px 10px;border:0;border-radius:6px;background:#0095f6;color:#fff;font:inherit;cursor:pointer';
   close.onclick = function () { box.remove(); };
   box.appendChild(close);
-})();
+})().catch(function (err) {
+  // Don't leave "already running" stuck after a crash — the next click should just work.
+  window.__igScrapeRunning = false;
+  console.error('[igScrape]', err);
+  window.alert('instapress-social scraper stopped with an error: ' + (err && err.message ? err.message : err) + '\n\nProgress so far is kept — run it again to carry on.');
+});
