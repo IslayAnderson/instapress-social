@@ -37,3 +37,7 @@ Re-running updates captions/dates without duplicating anything. `wp instapress-s
 ```bash
 python3 -m http.server 8765 --directory ui
 ```
+
+## License
+
+[WTFPL](LICENSE) — do what you want with it.
