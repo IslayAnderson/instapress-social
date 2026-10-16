@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: WTFPL
 License URI: http://www.wtfpl.net/
 
@@ -41,6 +41,9 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.5.1 =
+* Now licensed under the WTFPL (LICENSE file included).
 
 = 1.5.0 =
 * Upload posts.json (plus a media .zip or a server folder) on the Import page, preview, then import in the browser with a progress bar.
