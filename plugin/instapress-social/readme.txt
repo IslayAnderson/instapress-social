@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.5.2
+Stable tag: 1.6.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -17,6 +17,7 @@ An instapress-social archive of your own posts — and a feed of the people you 
 * Per-post aspect ratio — Auto, 1:1, 4:5, 3:4, 1.91:1, 9:16 or Original. Auto uses the first image, kept within 4:5…1.91:1; every carousel slide is cropped to the post's ratio.
 * Grid tiles square (classic) or 3:4 / 4:5 portrait (Settings).
 * Following: the Follow button on a profile copies its feed link (/feed/insta/). Paste it into instapress-social → Following on your own site and their posts appear in your home feed at /gram/home/, refreshed hourly.
+* Stories: photos/videos that disappear after 24 hours (configurable), shown in a full-screen viewer from your profile picture and the home feed's stories row. They're shared with followers through the same feed, and expired stories are archived privately (or deleted).
 * "Get instapress-social" button: visitors can download the exact plugin version installed on your site.
 * Hashtags link to your own grid filtered by tag (/gram/?hashtag=film); @mentions link to people you follow.
 * Settings → instapress-social for the profile header (picture, username, bio, website, follower counts).
@@ -41,6 +42,12 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.6.0 =
+* Stories: new Story post type (instapress-social → Stories) with photo/video, overlay text, link and display time.
+* Full-screen story viewer: progress bars, auto-advance, tap to skip, hold to pause, swipe down / Esc to close, video sound toggle; seen stories turn the ring grey.
+* Stories expire after 24 hours (Settings: 1–168h), then move to a private Expired archive or are deleted.
+* Followers receive stories through /feed/insta/; the home feed shows rings for accounts with live stories and plays them one after another.
 
 = 1.5.2 =
 * Now licensed under the MIT License (replaces the WTFPL).

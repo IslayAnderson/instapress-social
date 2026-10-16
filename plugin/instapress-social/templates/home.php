@@ -19,19 +19,44 @@ iar_template_part( 'header', array( 'topbar_title' => $me['username'] ) );
 		<div class="container home" data-profile data-username="<?php echo esc_attr( $me['username'] ); ?>" data-avatar="<?php echo esc_url( $me['avatar'] ); ?>" data-profile-url="<?php echo esc_url( $me['profile'] ); ?>">
 			<div class="home__feed">
 
+				<?php
+				// People with live stories first (they get the ring), then everyone else.
+				$story_groups = iar_story_groups( true );
+				$people       = $following;
+				uksort( $people, function ( $a, $b ) use ( $story_groups ) {
+					return (int) isset( $story_groups[ $b ] ) - (int) isset( $story_groups[ $a ] );
+				} );
+				?>
 				<ul class="stories">
 					<li class="story">
-						<a href="<?php echo esc_url( $me['profile'] ); ?>">
-							<span class="story__ring story__ring--own"><img class="avatar" src="<?php echo esc_url( $me['avatar'] ); ?>" alt=""></span>
-							<span class="story__name"><?php esc_html_e( 'Your profile', 'instapress-social' ); ?></span>
-						</a>
-					</li>
-					<?php foreach ( $following as $f ) : ?>
-						<li class="story">
-							<a href="<?php echo esc_url( $f['profile'] ); ?>" rel="noopener">
-								<span class="story__ring"><img class="avatar" src="<?php echo esc_url( $f['avatar'] ); ?>" alt=""></span>
-								<span class="story__name"><?php echo esc_html( $f['username'] ); ?></span>
+						<?php if ( isset( $story_groups['me'] ) ) : ?>
+							<button type="button" data-story-open="me" data-story-ids="<?php echo esc_attr( implode( ' ', wp_list_pluck( $story_groups['me']['stories'], 'id' ) ) ); ?>">
+								<span class="story__ring has-story"><img class="avatar" src="<?php echo esc_url( $me['avatar'] ); ?>" alt=""></span>
+								<span class="story__name"><?php esc_html_e( 'Your story', 'instapress-social' ); ?></span>
+							</button>
+						<?php else : ?>
+							<a href="<?php echo esc_url( $me['profile'] ); ?>">
+								<span class="story__ring story__ring--own"><img class="avatar" src="<?php echo esc_url( $me['avatar'] ); ?>" alt=""></span>
+								<span class="story__name"><?php esc_html_e( 'Your profile', 'instapress-social' ); ?></span>
 							</a>
+						<?php endif; ?>
+						<?php if ( current_user_can( 'edit_posts' ) ) : ?>
+							<a class="story__add" href="<?php echo esc_url( admin_url( 'post-new.php?post_type=' . IAR_STORY_TYPE ) ); ?>" aria-label="<?php esc_attr_e( 'Add a story', 'instapress-social' ); ?>">+</a>
+						<?php endif; ?>
+					</li>
+					<?php foreach ( $people as $id => $f ) : ?>
+						<li class="story">
+							<?php if ( isset( $story_groups[ $id ] ) ) : ?>
+								<button type="button" data-story-open="<?php echo esc_attr( $id ); ?>" data-story-ids="<?php echo esc_attr( implode( ' ', wp_list_pluck( $story_groups[ $id ]['stories'], 'id' ) ) ); ?>">
+									<span class="story__ring has-story"><img class="avatar" src="<?php echo esc_url( $f['avatar'] ); ?>" alt=""></span>
+									<span class="story__name"><?php echo esc_html( $f['username'] ); ?></span>
+								</button>
+							<?php else : ?>
+								<a href="<?php echo esc_url( $f['profile'] ); ?>" rel="noopener">
+									<span class="story__ring story__ring--own"><img class="avatar" src="<?php echo esc_url( $f['avatar'] ); ?>" alt=""></span>
+									<span class="story__name"><?php echo esc_html( $f['username'] ); ?></span>
+								</a>
+							<?php endif; ?>
 						</li>
 					<?php endforeach; ?>
 				</ul>

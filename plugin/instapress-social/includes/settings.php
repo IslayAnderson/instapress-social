@@ -21,6 +21,8 @@ function iar_defaults() {
 		'use_templates'   => 1,
 		'isolate_styles'  => 1,
 		'share_plugin'    => 1,
+		'story_hours'     => 24,
+		'story_after'     => 'archive',
 	);
 }
 
@@ -57,6 +59,8 @@ add_action( 'admin_init', function () {
 				'use_templates'  => empty( $in['use_templates'] ) ? 0 : 1,
 				'isolate_styles' => empty( $in['isolate_styles'] ) ? 0 : 1,
 				'share_plugin'   => empty( $in['share_plugin'] ) ? 0 : 1,
+				'story_hours'    => max( 1, min( 168, absint( $in['story_hours'] ?? 24 ) ) ),
+				'story_after'    => 'delete' === ( $in['story_after'] ?? '' ) ? 'delete' : 'archive',
 			);
 		},
 	) );
@@ -142,6 +146,22 @@ function iar_render_settings() {
 						</p>
 						<br>
 						<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[isolate_styles]" value="1" <?php checked( $s['isolate_styles'] ); ?>> <?php esc_html_e( 'Don\'t load the theme\'s stylesheets on these pages', 'instapress-social' ); ?></label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="iar-story-hours"><?php esc_html_e( 'Stories', 'instapress-social' ); ?></label></th>
+					<td>
+						<?php
+						printf(
+							/* translators: %s: number input */
+							esc_html__( 'Stories disappear after %s hours, then are', 'instapress-social' ),
+							'<input type="number" id="iar-story-hours" class="small-text" min="1" max="168" name="' . esc_attr( $name ) . '[story_hours]" value="' . esc_attr( $s['story_hours'] ) . '">'
+						);
+						?>
+						<select name="<?php echo esc_attr( $name ); ?>[story_after]">
+							<option value="archive" <?php selected( $s['story_after'], 'archive' ); ?>><?php esc_html_e( 'kept privately in your archive', 'instapress-social' ); ?></option>
+							<option value="delete" <?php selected( $s['story_after'], 'delete' ); ?>><?php esc_html_e( 'deleted (their media stays in the library)', 'instapress-social' ); ?></option>
+						</select>
 					</td>
 				</tr>
 				<tr>

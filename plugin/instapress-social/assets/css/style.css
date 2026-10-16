@@ -71,7 +71,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
    Avatar
    -------------------------------------------------------------------------- */
 .avatar { border-radius: 50%; object-fit: cover; background: var(--bg-hover); }
-.avatar-ring { display: inline-flex; flex: none; padding: 3px; border-radius: 50%; background: var(--ring); }
+.avatar-ring { display: inline-flex; flex: none; padding: 3px; border: 0; border-radius: 50%; background: var(--ring); }
+button.avatar-ring { cursor: pointer; }
+.avatar-ring.no-story { background: transparent; }
+.avatar-ring.is-seen, .story__ring.is-seen { background: var(--border); }
 .avatar-ring > .avatar { border: 3px solid var(--bg); }
 
 /* --------------------------------------------------------------------------
@@ -335,7 +338,9 @@ body.instapress-social { margin: 0; background: var(--bg); color: var(--text); }
 
 .stories { display: flex; gap: 16px; overflow-x: auto; list-style: none; margin: 0 0 24px; padding: 8px 4px; scrollbar-width: none; }
 .stories::-webkit-scrollbar { display: none; }
-.story a { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 66px; }
+.story { position: relative; }
+.story a, .story button { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 66px; padding: 0; color: inherit; }
+.story__add { position: absolute; top: 40px; left: 44px; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff !important; border: 2px solid var(--bg); font-weight: 700; line-height: 16px; text-align: center; display: block !important; font-size: 15px; }
 .story__ring { display: flex; padding: 2px; border-radius: 50%; background: var(--ring); }
 .story__ring--own { background: var(--border); }
 .story__ring .avatar { width: 56px; height: 56px; border: 2px solid var(--bg); }
@@ -393,3 +398,62 @@ body.instapress-social { margin: 0; background: var(--bg); color: var(--text); }
 
 /* Home feed tab on the desktop profile (mobile has the bottom bar). */
 @media (max-width: 767px) { .tabs__tab--home { display: none; } }
+
+
+/* --------------------------------------------------------------------------
+   Story viewer
+   -------------------------------------------------------------------------- */
+body.story-open { overflow: hidden; }
+body.story-open #wpadminbar { display: none; } /* logged-in admins: keep the bars and close button visible */
+.story-viewer { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; background: #111; }
+.story-viewer[hidden] { display: none; }
+.story-viewer__frame {
+  position: relative; overflow: hidden; background: #000; color: #fff;
+  height: min(100vh, 100dvh, 860px); aspect-ratio: 9 / 16; max-width: 100vw;
+  border-radius: 8px;
+}
+.story-viewer__media { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.story-viewer__media img, .story-viewer__media video { width: 100%; height: 100%; object-fit: cover; }
+.story-viewer.is-loading .story-viewer__media::after {
+  content: ""; position: absolute; width: 32px; height: 32px; border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.3); border-top-color: #fff; animation: iar-spin .8s linear infinite;
+}
+@keyframes iar-spin { to { transform: rotate(360deg); } }
+
+.story-viewer__bars { position: absolute; top: 8px; left: 8px; right: 8px; z-index: 3; display: flex; gap: 4px; }
+.story-viewer__bar { flex: 1; height: 2px; border-radius: 2px; background: rgba(255,255,255,.35); overflow: hidden; }
+.story-viewer__bar > span { display: block; height: 100%; background: #fff; transform-origin: left; transform: scaleX(0); }
+
+.story-viewer__head {
+  position: absolute; top: 18px; left: 0; right: 0; z-index: 4; display: flex; align-items: center; gap: 4px; padding: 0 8px 0 12px;
+  background: linear-gradient(rgba(0,0,0,.35), transparent); padding-bottom: 16px;
+}
+.story-viewer__user { display: flex; align-items: center; gap: 8px; margin-right: auto; color: #fff; font-weight: 600; font-size: 14px; }
+.story-viewer__user .avatar { width: 32px; height: 32px; }
+.story-viewer__time { color: rgba(255,255,255,.75); font-weight: 400; }
+.story-viewer__btn { color: #fff; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+.story-viewer__btn .icon { width: 22px; height: 22px; }
+
+.story-viewer__text {
+  position: absolute; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); z-index: 2; margin: 0;
+  text-align: center; font-size: 22px; font-weight: 700; line-height: 1.25; white-space: pre-line;
+  text-shadow: 0 1px 6px rgba(0,0,0,.6); pointer-events: none;
+}
+.story-viewer__link {
+  position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 4;
+  display: inline-flex; align-items: center; gap: 6px; max-width: 80%;
+  padding: 8px 14px; border-radius: 10px; background: #fff; color: #111; font-weight: 600; font-size: 13px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 2px 10px rgba(0,0,0,.3);
+}
+.story-viewer__link .icon { width: 16px; height: 16px; }
+
+/* Tap zones: left third = back, rest = forward. Below the header and link. */
+.story-viewer__tap { position: absolute; top: 70px; bottom: 80px; z-index: 1; background: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
+.story-viewer__tap--prev { left: 0; width: 33%; }
+.story-viewer__tap--next { right: 0; width: 67%; }
+.story-viewer.is-paused .story-viewer__head, .story-viewer.is-paused .story-viewer__bars { opacity: .4; transition: opacity .2s; }
+
+@media (max-width: 767px) {
+  .story-viewer { background: #000; }
+  .story-viewer__frame { height: 100dvh; width: 100vw; aspect-ratio: auto; border-radius: 0; }
+}

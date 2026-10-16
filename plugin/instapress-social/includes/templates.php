@@ -140,6 +140,7 @@ add_action( 'wp_enqueue_scripts', function () {
 	}
 	wp_enqueue_style( 'instapress-social', IAR_URL . 'assets/css/style.css', array(), IAR_VERSION );
 	wp_enqueue_script( 'instapress-social', IAR_URL . 'assets/js/app.js', array(), IAR_VERSION, true );
+	wp_enqueue_script( 'instapress-social-stories', IAR_URL . 'assets/js/stories.js', array(), IAR_VERSION, true );
 	wp_localize_script( 'instapress-social', 'IAR', array(
 		'hashtagBase' => iar_profile_url(),
 		'people'      => iar_known_people(),

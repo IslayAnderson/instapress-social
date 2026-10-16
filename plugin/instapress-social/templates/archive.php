@@ -28,7 +28,12 @@ iar_template_part( 'header' );
 
 			<header class="profile" data-profile data-username="<?php echo esc_attr( $iar['username'] ); ?>" data-avatar="<?php echo esc_url( iar_avatar_url() ); ?>" data-profile-url="<?php echo esc_url( $profile_url ); ?>">
 				<div class="profile__avatar">
-					<span class="avatar-ring"><img class="avatar" src="<?php echo esc_url( iar_avatar_url( 'medium' ) ); ?>" alt="<?php echo esc_attr( $iar['name'] ); ?>"></span>
+					<?php $own_stories = iar_own_story_items(); ?>
+					<?php if ( $own_stories ) : ?>
+						<button type="button" class="avatar-ring has-story" data-story-open="me" data-story-ids="<?php echo esc_attr( implode( ' ', wp_list_pluck( $own_stories, 'id' ) ) ); ?>" aria-label="<?php esc_attr_e( 'View story', 'instapress-social' ); ?>"><img class="avatar" src="<?php echo esc_url( iar_avatar_url( 'medium' ) ); ?>" alt="<?php echo esc_attr( $iar['name'] ); ?>"></button>
+					<?php else : ?>
+						<span class="avatar-ring no-story"><img class="avatar" src="<?php echo esc_url( iar_avatar_url( 'medium' ) ); ?>" alt="<?php echo esc_attr( $iar['name'] ); ?>"></span>
+					<?php endif; ?>
 				</div>
 				<section class="profile__info">
 					<div class="profile__row">

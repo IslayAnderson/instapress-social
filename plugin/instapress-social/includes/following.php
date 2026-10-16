@@ -102,6 +102,7 @@ function iar_parse_feed( $xml, $feed_url ) {
 		'profile'  => iar_clean_url( (string) $ns->profile ) ?: iar_clean_url( (string) $channel->link ),
 		'feed'     => $feed_url,
 		'count'    => (int) $ns->count,
+		'stories'  => iar_parse_feed_stories( $ns ),
 	);
 
 	$items = array();

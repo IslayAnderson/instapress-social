@@ -29,6 +29,7 @@ $profile_url = iar_profile_url();
 	<div data-modal-content style="display:contents"></div>
 </div>
 
+<?php iar_template_part( 'story-viewer' ); ?>
 <?php iar_template_part( 'sprite' ); ?>
 <?php wp_footer(); ?>
 </body>

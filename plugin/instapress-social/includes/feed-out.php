@@ -89,6 +89,7 @@ function iar_render_feed() {
 	<insta:avatar><?php echo $x( $me['avatar'] ); ?></insta:avatar>
 	<insta:profile><?php echo $x( $me['profile'] ); ?></insta:profile>
 	<insta:count><?php echo (int) wp_count_posts( IAR_POST_TYPE )->publish; ?></insta:count>
+<?php iar_feed_story_elements(); ?>
 <?php foreach ( $posts as $post ) : $item = iar_post_to_item( $post ); ?>
 	<item>
 		<title><?php echo $x( wp_html_excerpt( $item['caption'], 100, '…' ) ); ?></title>
