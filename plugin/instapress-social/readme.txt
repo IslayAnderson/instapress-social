@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.7.1
+Stable tag: 1.7.2
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -43,6 +43,11 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.7.2 =
+* Video posters no longer pick up a default image from plugins like "Default Featured Image" — only a video's own poster (or a single-video post's own featured image) is used.
+* Videos without a poster show their first frame in the grid instead of a broken image.
+* New "Video posters" tool on the Import page: generates a poster for every video that lacks one, from a frame of the video.
 
 = 1.7.1 =
 * imginn scraper: reels (/reel/, /tv/) are collected too; stops as soon as the grid ends instead of chasing the profile's post count (which includes reels imginn doesn't list); "Stop & save" button; an error no longer leaves it stuck on "already running".

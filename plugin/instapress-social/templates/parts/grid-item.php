@@ -12,7 +12,8 @@ if ( ! $media ) {
 }
 
 $first    = $media[0];
-$thumb    = $first['thumb'] ?: ( $first['poster'] ?? $first['src'] );
+// A video without a poster shows its own first frame rather than a borrowed image.
+$thumb    = $first['thumb'] ?: ( 'image' === $first['type'] ? $first['src'] : '' );
 $likes    = (int) iar_field( 'likes' );
 $comments = (int) iar_field( 'comments' );
 $caption  = iar_get_caption();
@@ -33,7 +34,11 @@ $modal_media = array_map( function ( $m ) {
 	data-comments="<?php echo esc_attr( $comments ); ?>"
 	data-location="<?php echo esc_attr( iar_field( 'location' ) ); ?>"
 	data-ratio="<?php echo esc_attr( iar_aspect_ratio() ); ?>">
-	<img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( wp_html_excerpt( $caption, 100, '…' ) ); ?>" loading="lazy">
+	<?php if ( $thumb ) : ?>
+		<img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( wp_html_excerpt( $caption, 100, '…' ) ); ?>" loading="lazy">
+	<?php else : ?>
+		<video class="grid__video" src="<?php echo esc_url( $first['src'] ); ?>#t=0.5" muted playsinline preload="metadata" tabindex="-1" aria-label="<?php echo esc_attr( wp_html_excerpt( $caption, 100, '…' ) ); ?>"></video>
+	<?php endif; ?>
 	<?php if ( count( $media ) > 1 ) : ?>
 		<span class="grid__badge" aria-label="<?php esc_attr_e( 'Carousel', 'instapress-social' ); ?>"><?php echo iar_icon( 'carousel' ); // phpcs:ignore ?></span>
 	<?php elseif ( 'video' === $first['type'] ) : ?>

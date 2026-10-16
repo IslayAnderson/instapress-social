@@ -21,23 +21,52 @@ function iar_profile_url() {
 }
 
 /**
+ * The featured image actually set on a post or attachment — read straight from
+ * the database, so plugins that substitute a default image (e.g. "Default
+ * Featured Image") can't make it look like a video has a poster.
+ */
+function iar_own_thumbnail_id( $post_id ) {
+	global $wpdb;
+	$id = (int) $wpdb->get_var( $wpdb->prepare(
+		"SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = '_thumbnail_id' LIMIT 1",
+		$post_id
+	) );
+	return $id && wp_attachment_is_image( $id ) ? $id : 0;
+}
+
+/**
+ * Poster image for a video: the video's own thumbnail (set by WordPress or by
+ * "Generate video posters"), or — for a post that is just this one video — the
+ * post's own featured image (the importer stores imginn's poster there).
+ */
+function iar_video_poster_id( $video_id, $post_id = 0, $only_item = false ) {
+	$id = iar_own_thumbnail_id( $video_id );
+	if ( ! $id && $only_item && $post_id ) {
+		$id = iar_own_thumbnail_id( $post_id );
+	}
+	return $id;
+}
+
+/**
  * Media for a post, in carousel order:
- * [ [ 'id' => 12, 'type' => 'image'|'video', 'src' => url, 'thumb' => url, 'poster' => url ], … ]
+ * [ [ 'id' => 12, 'type' => 'image'|'video', 'src' => url, 'thumb' => url, 'poster' => url, 'poster_id' => id ], … ]
+ * A video with no poster has empty 'thumb'/'poster' — templates then show its first frame.
  */
 function iar_get_media( $post_id = null ) {
 	$post_id = $post_id ?: get_the_ID();
-	$ids     = array_filter( array_map( 'absint', (array) iar_field( 'media', $post_id ) ) );
-	$poster  = get_the_post_thumbnail_url( $post_id, 'large' );
+	$ids     = array_values( array_filter( array_map( 'absint', (array) iar_field( 'media', $post_id ) ) ) );
 	$out     = array();
 
 	foreach ( $ids as $id ) {
 		if ( wp_attachment_is( 'video', $id ) ) {
-			$out[] = array(
-				'id'     => $id,
-				'type'   => 'video',
-				'src'    => wp_get_attachment_url( $id ),
-				'thumb'  => get_the_post_thumbnail_url( $post_id, 'medium_large' ) ?: '',
-				'poster' => $poster ?: '',
+			$poster_id = iar_video_poster_id( $id, $post_id, 1 === count( $ids ) );
+			$out[]     = array(
+				'id'        => $id,
+				'type'      => 'video',
+				'src'       => wp_get_attachment_url( $id ),
+				'thumb'     => $poster_id ? (string) wp_get_attachment_image_url( $poster_id, 'medium_large' ) : '',
+				'poster'    => $poster_id ? (string) wp_get_attachment_image_url( $poster_id, 'large' ) : '',
+				'poster_id' => $poster_id,
 			);
 		} elseif ( wp_attachment_is_image( $id ) ) {
 			$out[] = array(
@@ -49,13 +78,14 @@ function iar_get_media( $post_id = null ) {
 		}
 	}
 
-	// No gallery yet (e.g. a hand-made post): fall back to the featured image.
-	if ( ! $out && has_post_thumbnail( $post_id ) ) {
+	// No gallery yet (e.g. a hand-made post): fall back to the post's own featured image.
+	$own = $out ? 0 : iar_own_thumbnail_id( $post_id );
+	if ( $own ) {
 		$out[] = array(
-			'id'    => get_post_thumbnail_id( $post_id ),
+			'id'    => $own,
 			'type'  => 'image',
-			'src'   => $poster,
-			'thumb' => get_the_post_thumbnail_url( $post_id, 'medium_large' ),
+			'src'   => wp_get_attachment_image_url( $own, 'large' ),
+			'thumb' => wp_get_attachment_image_url( $own, 'medium_large' ),
 		);
 	}
 	return $out;
@@ -114,8 +144,8 @@ function iar_aspect_ratio( $post_id = null ) {
 	$media = iar_get_media( $post_id );
 	$first = $media[0] ?? null;
 	$ratio = $first ? iar_media_ratio( $first['id'] ) : null;
-	if ( ! $ratio && $first && 'video' === $first['type'] && has_post_thumbnail( $post_id ) ) {
-		$ratio = iar_media_ratio( get_post_thumbnail_id( $post_id ) );
+	if ( ! $ratio && $first && 'video' === $first['type'] && ! empty( $first['poster_id'] ) ) {
+		$ratio = iar_media_ratio( $first['poster_id'] );
 	}
 	if ( ! $ratio ) {
 		return 1.0;

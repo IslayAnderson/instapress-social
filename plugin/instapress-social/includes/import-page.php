@@ -71,6 +71,8 @@ function iar_render_import_page() {
 		<p style="max-width:720px;"><?php esc_html_e( 'Upload posts.json with the photos and videos you downloaded. You\'ll see a preview before anything is imported. Safe to re-run: existing posts are updated, nothing is duplicated.', 'instapress-social' ); ?></p>
 		<?php iar_render_import_upload(); ?>
 
+		<?php iar_render_video_posters(); ?>
+
 		<details style="margin-top:24px;max-width:900px;">
 			<summary style="cursor:pointer;font-weight:600;"><?php esc_html_e( 'Prefer the command line?', 'instapress-social' ); ?></summary>
 			<p><code>wp instapress-social import posts.json path/to/media-folder --dry-run</code></p>

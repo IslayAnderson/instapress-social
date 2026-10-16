@@ -187,7 +187,8 @@ function iar_story_to_item( $post ) {
 	}
 	$video  = wp_attachment_is( 'video', $media );
 	$src    = $video ? wp_get_attachment_url( $media ) : wp_get_attachment_image_url( $media, 'large' );
-	$poster = $video ? ( get_the_post_thumbnail_url( $post, 'large' ) ?: '' ) : '';
+	$pid    = $video ? iar_video_poster_id( $media, $post->ID, true ) : 0;
+	$poster = $pid ? (string) wp_get_attachment_image_url( $pid, 'large' ) : '';
 	if ( ! $src ) {
 		return null;
 	}
