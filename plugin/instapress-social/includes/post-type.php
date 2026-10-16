@@ -80,6 +80,29 @@ add_action( 'acf/include_fields', function () {
 	) );
 } );
 
+/*
+ * ACF 6.8.7+ treats gallery fields as image-only: its media picker refuses
+ * videos and saving a post whose gallery holds a video fails with "File must
+ * be a valid image." Our Media gallery is meant to hold photos *and* videos,
+ * so opt this one field out (images and videos allowed, nothing else).
+ */
+add_filter( 'acf/is_image_field', function ( $is_image, $field ) {
+	return ( is_array( $field ) && 'field_ig_media' === ( $field['key'] ?? '' ) ) ? false : $is_image;
+}, 20, 2 );
+add_filter( 'acf/is_image_field/type=gallery', function ( $is_image, $field ) {
+	return ( is_array( $field ) && 'field_ig_media' === ( $field['key'] ?? '' ) ) ? false : $is_image;
+}, 20, 2 );
+
+add_filter( 'acf/validate_value/key=field_ig_media', function ( $valid, $value, $field ) {
+	foreach ( (array) $value as $id ) {
+		if ( is_numeric( $id ) && ! wp_attachment_is_image( $id ) && ! wp_attachment_is( 'video', $id ) ) {
+			return __( 'Media must be photos or videos.', 'instapress-social' );
+		}
+	}
+	// Replace ACF's image-only verdict; keep any other message (e.g. a minimum count).
+	return ( true === $valid || __( 'File must be a valid image.', 'acf' ) === $valid ) ? true : $valid;
+}, 20, 3 );
+
 add_action( 'admin_notices', function () {
 	if ( function_exists( 'acf_add_local_field_group' ) || ! current_user_can( 'activate_plugins' ) ) {
 		return;

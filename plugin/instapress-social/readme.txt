@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.7.2
+Stable tag: 1.7.3
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -43,6 +43,12 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.7.3 =
+* Media type now follows the gallery automatically on save (one video = Video, several items = Carousel), and existing posts are corrected once — hand-made video posts now show in Reels and get poster checks.
+* Video posters tool finds every video without a poster, whatever the post's media type.
+* Edit screen: posts whose video has no poster get a "Generate poster now" button.
+* Fixed: with ACF 6.8.7+ a post containing a video couldn't be saved ("File must be a valid image") and the media picker refused videos. The gallery accepts photos and videos again.
 
 = 1.7.2 =
 * Video posters no longer pick up a default image from plugins like "Default Featured Image" — only a video's own poster (or a single-video post's own featured image) is used.
