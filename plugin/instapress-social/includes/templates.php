@@ -7,7 +7,7 @@
 defined( 'ABSPATH' ) || exit;
 
 function iar_is_view() {
-	return is_post_type_archive( IAR_POST_TYPE ) || is_singular( IAR_POST_TYPE ) || iar_is_home();
+	return is_post_type_archive( IAR_POST_TYPE ) || is_singular( IAR_POST_TYPE ) || iar_is_home() || ( function_exists( 'iar_is_compose' ) && iar_is_compose() );
 }
 
 /* -------------------------------------------------------------------------
@@ -92,6 +92,10 @@ add_filter( 'template_include', function ( $template ) {
 	if ( ! iar_templates_enabled() ) {
 		return $template;
 	}
+	if ( iar_is_compose() ) {
+		status_header( 200 );
+		return iar_locate_template( 'compose.php' );
+	}
 	if ( iar_is_home() ) {
 		status_header( 200 );
 		return iar_locate_template( 'home.php' );
@@ -149,6 +153,9 @@ add_action( 'wp_enqueue_scripts', function () {
 		'captcha'     => iar_captcha_client_config(),
 	) );
 	iar_captcha_enqueue();
+	if ( iar_is_compose() ) {
+		wp_enqueue_script( 'instapress-social-compose', IAR_URL . 'assets/js/compose.js', array(), IAR_VERSION, true );
+	}
 } );
 
 function iar_isolating() {
@@ -197,6 +204,8 @@ add_filter( 'body_class', function ( $classes ) {
 add_filter( 'document_title_parts', function ( $parts ) {
 	if ( iar_templates_enabled() && is_singular( IAR_POST_TYPE ) ) {
 		$parts['title'] = wp_html_excerpt( iar_get_caption(), 60, '…' ) . ' • @' . iar_setting( 'username' );
+	} elseif ( iar_templates_enabled() && iar_is_compose() ) {
+		$parts['title'] = __( 'New post', 'instapress-social' );
 	} elseif ( iar_templates_enabled() && iar_is_home() ) {
 		$parts['title'] = __( 'Home', 'instapress-social' ) . ' • @' . iar_setting( 'username' );
 	} elseif ( iar_templates_enabled() && is_post_type_archive( IAR_POST_TYPE ) ) {

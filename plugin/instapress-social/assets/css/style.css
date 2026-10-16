@@ -526,3 +526,63 @@ body.email-modal-open { overflow: hidden; }
 
 /* reCAPTCHA badge: clear of the mobile bottom bar. */
 @media (max-width: 767px) { .grecaptcha-badge { bottom: 66px !important; } }
+
+/* --------------------------------------------------------------------------
+   Composer (/gram/new/)
+   -------------------------------------------------------------------------- */
+.compose { max-width: 560px; padding-bottom: 80px; }
+.compose__bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 12px 0; background: var(--bg); border-bottom: 1px solid var(--border); }
+.admin-bar .compose__bar { top: 32px; }
+.compose__cancel { color: var(--text); font-size: 15px; }
+.compose__kinds { flex: 1; display: flex; justify-content: center; gap: 4px; }
+.compose__kinds button { padding: 6px 14px; border-radius: 16px; font-weight: 600; color: var(--text-muted); }
+.compose__kinds button[aria-selected="true"] { background: var(--bg-hover); color: var(--text); }
+.compose__share { color: var(--accent); font-weight: 700; font-size: 15px; }
+.compose__share:disabled { opacity: .35; cursor: default; }
+
+.compose__empty { padding: 64px 16px; text-align: center; }
+.compose__pick { display: inline-flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 32px; border: 2px dashed var(--border); border-radius: 16px; font-size: 16px; font-weight: 600; }
+.compose__pick .icon { width: 40px; height: 40px; }
+.compose__hint { margin: 16px 0 0; color: var(--text-muted); font-size: 13px; }
+
+.compose__preview { position: relative; margin: 16px 0 12px; aspect-ratio: var(--ar, 1); max-height: 70vh; overflow: hidden; border-radius: 8px; background: #000; }
+.compose__preview > img, .compose__preview > video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.compose__preview .carousel__dots { bottom: 10px; }
+
+.compose__strip { display: flex; gap: 8px; overflow-x: auto; list-style: none; margin: 0 0 20px; padding: 4px 0; scrollbar-width: none; }
+.compose__strip::-webkit-scrollbar { display: none; }
+.compose__thumb { position: relative; flex: none; width: 72px; height: 72px; border-radius: 6px; overflow: hidden; outline: 2px solid transparent; outline-offset: 1px; background: var(--bg-hover); }
+.compose__thumb.is-current { outline-color: var(--accent); }
+.compose__thumb-pick { display: block; width: 100%; height: 100%; padding: 0; }
+.compose__thumb-pick img, .compose__thumb-pick video { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.compose__num { position: absolute; left: 4px; top: 4px; min-width: 18px; height: 18px; border-radius: 9px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; font-weight: 700; text-align: center; line-height: 18px; pointer-events: none; }
+.compose__vid { position: absolute; left: 5px; bottom: 3px; color: #fff; font-size: 11px; text-shadow: 0 0 3px #000; pointer-events: none; }
+.compose__x { position: absolute; right: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.65); color: #fff; font-size: 15px; line-height: 18px; }
+.compose__move { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; }
+.compose__move button { width: 26px; height: 22px; background: rgba(0,0,0,.55); color: #fff; font-size: 16px; line-height: 20px; }
+.compose__thumb--add button { width: 100%; height: 100%; font-size: 30px; color: var(--text-muted); border: 2px dashed var(--border); border-radius: 6px; }
+
+.compose__field { display: block; margin-bottom: 18px; }
+.compose__field[hidden] { display: none; }
+.compose__label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+.compose__label em { font-style: normal; font-weight: 400; color: var(--text-muted); }
+.compose__field textarea, .compose__field input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--text); font: inherit; font-size: 16px; /* 16px stops iOS zooming */
+}
+.compose__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 6px 12px; border: 1px solid var(--border); border-radius: 16px; font-size: 13px; }
+.chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+.compose__progress { position: fixed; inset: 0; z-index: 450; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--backdrop); }
+.compose__progress[hidden] { display: none; }
+.compose__progress-box { width: min(100%, 320px); padding: 20px; border-radius: 12px; background: var(--bg-elevated); text-align: center; }
+.compose__progress-box p { margin: 12px 0 0; font-weight: 600; }
+.compose__bar-track { height: 6px; border-radius: 3px; background: var(--bg-hover); overflow: hidden; }
+.compose__bar-fill { width: 0; height: 100%; background: var(--accent); transition: width .2s; }
+
+@media (max-width: 767px) {
+  .compose { padding: 0 16px 80px; }
+  .compose__bar { margin: 0 -16px; padding: 10px 16px; }
+  .compose ~ .site-footer, .compose + .site-footer { display: none; }
+}

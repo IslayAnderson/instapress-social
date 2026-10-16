@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.11.0
+Stable tag: 1.12.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -44,6 +44,9 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.12.0 =
+* New phone-friendly way to post: tap + in the bottom bar (or New post on your profile) to open /gram/new/. Pick photos and videos, reorder them, choose the shape, add a caption and location, and share — or switch to Story. Videos get a poster captured automatically. Only logged-in users who can publish posts can use it; files picked but never shared are tidied up after a day.
 
 = 1.11.0 =
 * "Regenerate all posters" on the Import page: recaptures a frame from every video (choose the moment, e.g. 1 second in) and replaces its poster. Posters made by the plugin before are deleted; cover images imported from Instagram are kept. Single-video posts' featured images follow the new poster.

@@ -40,8 +40,8 @@ iar_template_part( 'header', array( 'topbar_title' => $me['username'] ) );
 								<span class="story__name"><?php esc_html_e( 'Your profile', 'instapress-social' ); ?></span>
 							</a>
 						<?php endif; ?>
-						<?php if ( current_user_can( 'edit_posts' ) ) : ?>
-							<a class="story__add" href="<?php echo esc_url( admin_url( 'post-new.php?post_type=' . IAR_STORY_TYPE ) ); ?>" aria-label="<?php esc_attr_e( 'Add a story', 'instapress-social' ); ?>">+</a>
+						<?php if ( iar_can_compose() ) : ?>
+							<a class="story__add" href="<?php echo esc_url( iar_compose_url( 'story' ) ); ?>" aria-label="<?php esc_attr_e( 'Add a story', 'instapress-social' ); ?>">+</a>
 						<?php endif; ?>
 					</li>
 					<?php foreach ( $people as $id => $f ) : ?>

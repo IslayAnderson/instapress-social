@@ -43,6 +43,9 @@ iar_template_part( 'header' );
 							<?php if ( $iar['website'] ) : ?>
 								<a class="btn" href="<?php echo esc_url( $iar['website'] ); ?>"><?php esc_html_e( 'Website', 'instapress-social' ); ?></a>
 							<?php endif; ?>
+							<?php if ( iar_can_compose() ) : ?>
+								<a class="btn" href="<?php echo esc_url( iar_compose_url() ); ?>"><?php esc_html_e( 'New post', 'instapress-social' ); ?></a>
+							<?php endif; ?>
 							<?php if ( iar_download_enabled() ) : ?>
 								<a class="btn" href="<?php echo esc_url( iar_download_url() ); ?>" download title="<?php echo esc_attr( sprintf( __( 'Download the instapress-social WordPress plugin (version %s) to follow people from your own site', 'instapress-social' ), IAR_VERSION ) ); ?>"><?php esc_html_e( 'Get instapress-social', 'instapress-social' ); ?></a>
 							<?php endif; ?>
