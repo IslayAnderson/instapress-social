@@ -1,6 +1,6 @@
 # instapress-social
 
-**Download:** grab `instapress-social-<version>.zip` from [Releases](../../releases) and upload it in *Plugins → Add New → Upload Plugin*.
+**Download:** grab `instapress-social-<version>.zip` from [Releases](../../releases) and upload it in *Plugins → Add New → Upload Plugin*. From 1.7.0 the plugin updates itself from Releases — turn on *Enable auto-updates* on the Plugins screen to have it happen automatically.
 
 A WordPress plugin for an instapress-social profile on your own site — your posts in a profile grid, plus a home feed of people you follow on other instapress-social sites.
 

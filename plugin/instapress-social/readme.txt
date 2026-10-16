@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -20,6 +20,7 @@ An instapress-social archive of your own posts — and a feed of the people you 
 * Stories: photos/videos that disappear after 24 hours (configurable), shown in a full-screen viewer from your profile picture and the home feed's stories row. They're shared with followers through the same feed, and expired stories are archived privately (or deleted).
 * "Get instapress-social" button: visitors can download the exact plugin version installed on your site.
 * Hashtags link to your own grid filtered by tag (/gram/?hashtag=film); @mentions link to people you follow.
+* Updates from GitHub Releases: "Update now" and "Enable auto-updates" on the Plugins screen work as for any plugin (WordPress 5.8+).
 * Settings → instapress-social for the profile header (picture, username, bio, website, follower counts).
 * WP-CLI importer.
 
@@ -42,6 +43,10 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.7.0 =
+* Updates come from GitHub Releases: new versions show on the Plugins screen with "Update now", the auto-updates toggle works, and "View details" shows the release notes. Only zips attached to releases of IslayAnderson/instapress-social are accepted.
+* "Check for updates" and "Releases" links under the plugin.
 
 = 1.6.0 =
 * Stories: new Story post type (instapress-social → Stories) with photo/video, overlay text, link and display time.
