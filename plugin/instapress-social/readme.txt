@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.8.0
+Stable tag: 1.9.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -44,6 +44,10 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.9.0 =
+* Optional Cloudflare Turnstile bot protection for comments and likes (Settings → instapress-social → Bot protection). Usually invisible; a fresh single-use token is checked with Cloudflare for every comment and like, requiring the right action and this site's hostname, and requests are rejected if the check fails or Cloudflare can't be reached. Comment moderators are never challenged.
+* The secret key is checked with Cloudflare when saved, never shown again, kept out of autoloaded options, or can be set as IAR_TURNSTILE_SECRET in wp-config.php.
 
 = 1.8.0 =
 * Comments: real WordPress comments on posts — shown beside the photo and in the grid pop-up, with replies. Visitors comment without an account: the first time, a pop-up asks for their email (required, never shown) and an optional name — blank posts as "Anonymous" — and can remember them on that device. Discussion settings, moderation, Akismet and notification emails all apply. Imported Instagram comments show as "N earlier comments on Instagram".

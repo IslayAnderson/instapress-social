@@ -188,6 +188,8 @@ function iar_like_toggle() {
 		wp_send_json_error( __( 'Couldn\'t identify this browser.', 'instapress-social' ), 400 );
 	}
 
+	iar_turnstile_require( 'like' );
+
 	// Light throttle per address: 120 toggles an hour is plenty for a person.
 	$bucket = 'iar_like_rate_' . md5( (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ) );
 	$hits   = (int) get_transient( $bucket );
@@ -372,6 +374,8 @@ function iar_ajax_post_comment() {
 	if ( ! iar_comments_enabled() || IAR_POST_TYPE !== get_post_type( $post_id ) ) {
 		wp_send_json_error( __( 'Comments are closed.', 'instapress-social' ), 403 );
 	}
+	iar_turnstile_require( 'comment' );
+
 	$data = wp_unslash( $_POST ); // phpcs:ignore WordPress.Security.NonceVerification
 
 	// Visitors comment anonymously: an email is required (never shown), a name is optional.

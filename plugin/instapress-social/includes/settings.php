@@ -23,6 +23,9 @@ function iar_defaults() {
 		'share_plugin'    => 1,
 		'allow_comments'  => 1,
 		'allow_likes'     => 1,
+		'ts_sitekey'      => '',
+		'ts_comments'     => 1,
+		'ts_likes'        => 1,
 		'story_hours'     => 24,
 		'story_after'     => 'archive',
 	);
@@ -63,6 +66,9 @@ add_action( 'admin_init', function () {
 				'share_plugin'   => empty( $in['share_plugin'] ) ? 0 : 1,
 				'allow_comments' => empty( $in['allow_comments'] ) ? 0 : 1,
 				'allow_likes'    => empty( $in['allow_likes'] ) ? 0 : 1,
+				'ts_sitekey'     => preg_replace( '/[^A-Za-z0-9_\-]/', '', (string) ( $in['ts_sitekey'] ?? '' ) ),
+				'ts_comments'    => empty( $in['ts_comments'] ) ? 0 : 1,
+				'ts_likes'       => empty( $in['ts_likes'] ) ? 0 : 1,
 				'story_hours'    => max( 1, min( 168, absint( $in['story_hours'] ?? 24 ) ) ),
 				'story_after'    => 'delete' === ( $in['story_after'] ?? '' ) ? 'delete' : 'archive',
 			);
@@ -212,6 +218,8 @@ function iar_render_settings() {
 					<td><input type="number" id="iar-per-page" class="small-text" min="3" max="99" step="3" name="<?php echo esc_attr( $name ); ?>[per_page]" value="<?php echo esc_attr( $s['per_page'] ); ?>"></td>
 				</tr>
 			</table>
+
+			<?php iar_render_turnstile_settings( $s, $name ); ?>
 
 			<?php submit_button(); ?>
 		</form>

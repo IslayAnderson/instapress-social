@@ -519,3 +519,7 @@ body.email-modal-open { overflow: hidden; }
 .email-modal__check { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; font-size: 13px; }
 .email-modal__error { margin: 0 0 12px; font-size: 13px; color: #ed4956; }
 .email-modal__actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* Turnstile: invisible unless Cloudflare asks for a check, then shown above everything. */
+.ts-challenge { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 500; }
+.ts-challenge:empty, .ts-challenge > div:not(:has(iframe[style*="visibility: visible"])) { pointer-events: none; }

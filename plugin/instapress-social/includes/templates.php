@@ -146,7 +146,12 @@ add_action( 'wp_enqueue_scripts', function () {
 		'people'      => iar_known_people(),
 		'ajax'        => admin_url( 'admin-ajax.php' ),
 		'likes'       => iar_likes_enabled(),
+		'turnstile'   => iar_turnstile_client_config(),
 	) );
+	if ( iar_turnstile_client_config() ) {
+		// Explicit rendering: tokens are fetched on demand, one per comment or like.
+		wp_enqueue_script( 'cf-turnstile', 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', array(), null, array( 'strategy' => 'defer', 'in_footer' => true ) ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+	}
 } );
 
 function iar_isolating() {

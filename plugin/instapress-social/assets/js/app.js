@@ -291,6 +291,59 @@
   });
 
   /* ----------------------------------------------------------------------
+     Cloudflare Turnstile: one invisible widget per action ("comment", "like"),
+     executed on demand. Tokens are single-use, so each request resets and
+     re-executes its widget. A challenge only appears if Cloudflare needs one.
+     ---------------------------------------------------------------------- */
+  var TS = CFG.turnstile || null;
+  var tsWidgets = {}, tsPending = {}, tsBox = null;
+
+  function whenTurnstile() {
+    return new Promise(function (resolve, reject) {
+      var t0 = Date.now();
+      (function poll() {
+        if (window.turnstile && window.turnstile.render) return resolve(window.turnstile);
+        if (Date.now() - t0 > 15000) return reject(new Error('Bot check didn\'t load — check your connection and try again.'));
+        setTimeout(poll, 100);
+      })();
+    });
+  }
+
+  function turnstileToken(action) {
+    if (!TS || !TS[action]) return Promise.resolve('');
+    return whenTurnstile().then(function (ts) {
+      return new Promise(function (resolve, reject) {
+        if (!tsBox) {
+          tsBox = document.createElement('div');
+          tsBox.className = 'ts-challenge';
+          document.body.appendChild(tsBox);
+        }
+        var timer = setTimeout(function () { fail(new Error('The bot check timed out — please try again.')); }, 60000);
+        function done(token) { clearTimeout(timer); delete tsPending[action]; resolve(token); }
+        function fail(err) { clearTimeout(timer); delete tsPending[action]; reject(err); }
+        tsPending[action] = { done: done, fail: fail };
+
+        if (tsWidgets[action] === undefined) {
+          var el = document.createElement('div');
+          tsBox.appendChild(el);
+          tsWidgets[action] = ts.render(el, {
+            sitekey: TS.sitekey,
+            action: action,
+            execution: 'execute',
+            appearance: 'interaction-only',
+            callback: function (token) { tsPending[action] && tsPending[action].done(token); },
+            'error-callback': function () { tsPending[action] && tsPending[action].fail(new Error('Couldn\'t confirm you\'re human — please try again.')); return true; },
+            'expired-callback': function () {},
+          });
+        } else {
+          ts.reset(tsWidgets[action]);
+        }
+        ts.execute(tsWidgets[action]);
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------------------
      Likes (stored as WordPress comments of type "iar_like")
      ---------------------------------------------------------------------- */
   var LIKED_KEY = 'iar_liked';
@@ -344,11 +397,15 @@
     setLikes(scope, before + (was ? -1 : 1));
     if (!was) { btn.classList.remove('is-pop'); void btn.offsetWidth; btn.classList.add('is-pop'); }
 
-    var body = new FormData();
-    body.append('action', 'iar_like');
-    body.append('post_id', id);
-    body.append('vid', visitorId());
-    fetch(CFG.ajax, { method: 'POST', body: body, credentials: 'same-origin' })
+    turnstileToken('like')
+      .then(function (token) {
+        var body = new FormData();
+        body.append('action', 'iar_like');
+        body.append('post_id', id);
+        body.append('vid', visitorId());
+        if (token) body.append('cf-turnstile-response', token);
+        return fetch(CFG.ajax, { method: 'POST', body: body, credentials: 'same-origin' });
+      })
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (!res.success) throw new Error(res.data);
@@ -530,9 +587,13 @@
     }
     btn.disabled = true;
     msg.hidden = true;
-    var body = new FormData(form);
-    body.append('action', 'iar_post_comment');
-    fetch(CFG.ajax, { method: 'POST', body: body, credentials: 'same-origin' })
+    turnstileToken('comment')
+      .then(function (token) {
+        var body = new FormData(form);
+        body.append('action', 'iar_post_comment');
+        if (token) body.append('cf-turnstile-response', token);
+        return fetch(CFG.ajax, { method: 'POST', body: body, credentials: 'same-origin' });
+      })
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (!res.success) {
