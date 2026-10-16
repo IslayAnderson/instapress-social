@@ -14,8 +14,8 @@ if ( ! $media ) {
 $first    = $media[0];
 // A video without a poster shows its own first frame rather than a borrowed image.
 $thumb    = $first['thumb'] ?: ( 'image' === $first['type'] ? $first['src'] : '' );
-$likes    = (int) iar_field( 'likes' );
-$comments = (int) iar_field( 'comments' );
+$likes    = iar_like_total( get_the_ID() );
+$comments = iar_comment_total( get_the_ID() );
 $caption  = iar_get_caption();
 
 $modal_media = array_map( function ( $m ) {
@@ -30,6 +30,7 @@ $modal_media = array_map( function ( $m ) {
 	data-media="<?php echo esc_attr( wp_json_encode( $modal_media ) ); ?>"
 	data-caption="<?php echo esc_attr( $caption ); ?>"
 	data-date="<?php echo esc_attr( get_post_time( 'c', true ) ); ?>"
+	data-id="<?php the_ID(); ?>"
 	data-likes="<?php echo esc_attr( $likes ); ?>"
 	data-comments="<?php echo esc_attr( $comments ); ?>"
 	data-location="<?php echo esc_attr( iar_field( 'location' ) ); ?>"

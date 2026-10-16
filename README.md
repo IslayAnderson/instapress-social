@@ -18,6 +18,7 @@ import/                      your posts.json + downloaded media (git-ignored)
 - **Templates**: profile grid at `/gram/` (Posts / Reels tabs, modal, load more, `?hashtag=` filter), single post at `/p/<shortcode>/`, home feed at `/gram/home/`. Override any template from your theme in `instapress-social/`.
 - **Aspect ratios** per post (Auto, 1:1, 4:5, 3:4, 1.91:1, 9:16, Original) and grid tile shape.
 - **Following**: the **Follow** button copies the profile's feed link (`/feed/insta/`). Paste it into *instapress-social → Following* on your own site; their posts show in your home feed, refreshed hourly.
+- **Likes & comments** on WordPress's own comment system: comment panel with replies (Discussion settings, moderation and Akismet apply), likes for visitors without accounts, double-tap to like.
 - **Stories**: photos/videos that disappear after 24h, played full-screen from your profile picture and the home feed's stories row; followers get them through the same feed.
 - **Get instapress-social**: a profile button that downloads the plugin version installed on the site (`/?download=instapress-social`).
 - **Settings → instapress-social**: profile picture, username, bio, website, counts, grid, templates, sharing.

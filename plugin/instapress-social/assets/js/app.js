@@ -127,14 +127,12 @@
      Like / save toggles (purely visual)
      ---------------------------------------------------------------------- */
   document.addEventListener('click', function (e) {
-    var like = e.target.closest('[data-action="like"]');
-    if (like) {
-      like.classList.toggle('is-liked');
-      var counter = like.closest('.post, .card').querySelector('[data-likes-count]');
-      if (counter) {
-        var n = parseInt(counter.dataset.likesCount, 10) + (like.classList.contains('is-liked') ? 1 : 0);
-        counter.textContent = formatCount(n) + (n === 1 ? ' like' : ' likes');
-      }
+    var like = e.target.closest('[data-action="like"][data-post-id]');
+    if (like) toggleLike(like);
+    var commentBtn = e.target.closest('[data-action="comment"]');
+    if (commentBtn) {
+      var input = commentBtn.closest('.post, .card') && commentBtn.closest('.post, .card').querySelector('.comment-form__input');
+      if (input) input.focus();
     }
     var share = e.target.closest('[data-action="share"]');
     if (share) {
@@ -167,7 +165,7 @@
 
     var ratio = parseFloat(d.ratio) || 1;
 
-    return '<article class="post" style="--ar: ' + ratio + '">' +
+    return '<article class="post" data-post-id="' + esc(d.id || '') + '" style="--ar: ' + ratio + '">' +
       '<div class="post__media">' + carouselHTML(media) + '</div>' +
       '<div class="post__panel">' +
         '<header class="post__header">' +
@@ -182,16 +180,18 @@
               '<div><p class="comment__text"><a class="post__user" href="' + esc(profileUrl) + '">' + esc(username) + '</a>' + formatCaption(d.caption) + '</p>' +
               '<div class="comment__meta"><time datetime="' + esc(d.date) + '">' + esc(formatDate(d.date)) + '</time></div></div></div>'
             : '') +
+          '<div class="comments" data-comments></div>' +
         '</div>' +
         '<footer class="post__footer">' +
           '<div class="post__actions">' +
-            '<button class="icon-btn" data-action="like" aria-label="Like">' + icon('heart') + '</button>' +
-            '<button class="icon-btn" aria-label="Comment">' + icon('comment') + '</button>' +
+            (CFG.likes && d.id ? '<button class="icon-btn" data-action="like" data-post-id="' + esc(d.id) + '" aria-label="Like">' + icon('heart') + '</button>' : '') +
+            '<button class="icon-btn" data-action="comment" aria-label="Comment">' + icon('comment') + '</button>' +
             '<button class="icon-btn" data-action="share" aria-label="Share">' + icon('share') + '</button>' +
             '<button class="icon-btn" data-action="save" aria-label="Save">' + icon('bookmark') + '</button>' +
           '</div>' +
           '<p class="post__likes" data-likes-count="' + likes + '">' + formatCount(likes) + (likes === 1 ? ' like' : ' likes') + '</p>' +
           '<a class="post__date" href="' + esc(item.getAttribute('href')) + '"><time datetime="' + esc(d.date) + '">' + esc(formatDate(d.date)) + '</time></a>' +
+          '<div data-comment-form-slot></div>' +
         '</footer>' +
       '</div>' +
     '</article>';
@@ -204,6 +204,8 @@
     var item = items[i];
     modal.querySelector('[data-modal-content]').innerHTML = postHTML(item);
     initCarousel(modal.querySelector('.carousel'));
+    markLiked(modal);
+    loadComments(modal.querySelector('.post'));
     modal.querySelector('.modal__step--prev').hidden = i === 0;
     modal.querySelector('.modal__step--next').hidden = i === items.length - 1;
 
@@ -286,6 +288,189 @@
         }
       })
       .catch(function () { location.href = btn.href; });
+  });
+
+  /* ----------------------------------------------------------------------
+     Likes (stored as WordPress comments of type "iar_like")
+     ---------------------------------------------------------------------- */
+  var LIKED_KEY = 'iar_liked';
+
+  function likedSet() {
+    try { return new Set(JSON.parse(localStorage.getItem(LIKED_KEY) || '[]').map(String)); } catch (e) { return new Set(); }
+  }
+  function saveLiked(set) {
+    try { localStorage.setItem(LIKED_KEY, JSON.stringify(Array.from(set).slice(-2000))); } catch (e) {}
+  }
+  // A random ID for this browser, so a visitor's like counts once (stored hashed by WordPress).
+  function visitorId() {
+    try {
+      var id = localStorage.getItem('iar_vid');
+      if (!id) {
+        id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)));
+        localStorage.setItem('iar_vid', id);
+      }
+      return id;
+    } catch (e) { return ''; }
+  }
+  function setLikes(scope, n) {
+    var counter = scope && scope.querySelector('[data-likes-count]');
+    if (!counter) return;
+    counter.dataset.likesCount = n;
+    counter.textContent = formatCount(n) + (n === 1 ? ' like' : ' likes');
+  }
+  function markLiked(root) {
+    var set = likedSet();
+    (root || document).querySelectorAll('[data-action="like"][data-post-id]').forEach(function (b) {
+      var on = set.has(String(b.dataset.postId));
+      b.classList.toggle('is-liked', on);
+      b.innerHTML = icon(on ? 'heart-filled' : 'heart');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  function toggleLike(btn, onlyLike) {
+    var id = String(btn.dataset.postId);
+    var set = likedSet();
+    var was = set.has(id);
+    if (onlyLike && was) return;
+    var scope = btn.closest('.post, .card');
+    var counter = scope && scope.querySelector('[data-likes-count]');
+    var before = counter ? parseInt(counter.dataset.likesCount, 10) || 0 : 0;
+
+    // Optimistic update, then the server's count.
+    was ? set.delete(id) : set.add(id);
+    saveLiked(set);
+    markLiked(scope || document);
+    setLikes(scope, before + (was ? -1 : 1));
+    if (!was) { btn.classList.remove('is-pop'); void btn.offsetWidth; btn.classList.add('is-pop'); }
+
+    var body = new FormData();
+    body.append('action', 'iar_like');
+    body.append('post_id', id);
+    body.append('vid', visitorId());
+    fetch(CFG.ajax, { method: 'POST', body: body, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res.success) throw new Error(res.data);
+        var s = likedSet();
+        res.data.liked ? s.add(id) : s.delete(id);
+        saveLiked(s);
+        markLiked(scope || document);
+        setLikes(scope, res.data.likes);
+      })
+      .catch(function () {
+        var s = likedSet();
+        was ? s.add(id) : s.delete(id);
+        saveLiked(s);
+        markLiked(scope || document);
+        setLikes(scope, before);
+      });
+  }
+
+  // Double-tap a photo to like it, like Instagram.
+  document.addEventListener('dblclick', function (e) {
+    var media = e.target.closest('.post__media, .card__media');
+    if (!media) return;
+    var scope = media.closest('.post, .card');
+    var btn = scope && scope.querySelector('[data-action="like"][data-post-id]');
+    if (!btn) return;
+    e.preventDefault();
+    toggleLike(btn, true);
+    var heart = document.createElement('span');
+    heart.className = 'like-burst';
+    heart.innerHTML = icon('heart-filled');
+    media.appendChild(heart);
+    setTimeout(function () { heart.remove(); }, 900);
+  });
+
+  markLiked(document);
+
+  /* ----------------------------------------------------------------------
+     Comments (WordPress comments)
+     ---------------------------------------------------------------------- */
+  function loadComments(post) {
+    if (!post || !post.dataset.postId) return;
+    var list = post.querySelector('[data-comments]'), slot = post.querySelector('[data-comment-form-slot]');
+    fetch(CFG.ajax + '?action=iar_comments&post_id=' + encodeURIComponent(post.dataset.postId), { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res.success) return;
+        if (list) list.innerHTML = res.data.comments;
+        if (slot) slot.innerHTML = res.data.form;
+        setLikes(post, res.data.likes);
+      })
+      .catch(function () {});
+  }
+
+  document.addEventListener('input', function (e) {
+    var input = e.target.closest('.comment-form__input');
+    if (!input) return;
+    var form = input.form;
+    form.querySelector('.comment-form__post').disabled = !input.value.trim();
+    var who = form.querySelector('[data-comment-who]');
+    if (who && input.value.trim()) who.hidden = false;
+  });
+
+  document.addEventListener('click', function (e) {
+    var reply = e.target.closest('[data-reply-to]');
+    if (!reply) return;
+    var post = reply.closest('.post, .card');
+    var form = post && post.querySelector('[data-comment-form]');
+    if (!form) return;
+    form.elements.comment_parent.value = reply.dataset.replyTo;
+    var input = form.querySelector('.comment-form__input');
+    input.value = '@' + reply.dataset.replyName.replace(/\s+/g, '') + ' ';
+    input.placeholder = 'Reply to ' + reply.dataset.replyName + '…';
+    input.focus();
+    form.querySelector('.comment-form__post').disabled = false;
+  });
+
+  document.addEventListener('submit', function (e) {
+    var form = e.target.closest('[data-comment-form]');
+    if (!form) return;
+    e.preventDefault();
+    var msg = form.querySelector('[data-comment-msg]');
+    var who = form.querySelector('[data-comment-who]');
+    var btn = form.querySelector('.comment-form__post');
+    // Guests: ask for name/email the first time.
+    if (who && who.hidden === false) {
+      var missing = Array.prototype.find.call(who.querySelectorAll('input[required]'), function (i) { return !i.value.trim(); });
+      if (missing) { missing.focus(); return; }
+    }
+    btn.disabled = true;
+    msg.hidden = true;
+    var body = new FormData(form);
+    body.append('action', 'iar_post_comment');
+    fetch(CFG.ajax, { method: 'POST', body: body, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res.success) throw new Error(res.data || 'Couldn\'t post your comment.');
+        var post = form.closest('.post, .card');
+        var list = post.querySelector('[data-comments]');
+        var holder = document.createElement('div');
+        holder.innerHTML = res.data.html;
+        var node = holder.firstElementChild;
+        var parent = res.data.parent && list && list.querySelector('[data-comment-id="' + res.data.parent + '"] > div');
+        if (parent) {
+          var replies = parent.querySelector('.comment__replies');
+          if (!replies) { replies = document.createElement('div'); replies.className = 'comment__replies'; parent.appendChild(replies); }
+          replies.appendChild(node);
+        } else if (list) {
+          list.appendChild(node);
+        }
+        if (node) node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        var input = form.querySelector('.comment-form__input');
+        input.value = '';
+        input.placeholder = 'Add a comment…';
+        form.elements.comment_parent.value = '0';
+        if (who) who.hidden = true;
+        if (!res.data.approved) { msg.textContent = 'Thanks — your comment will appear once it\'s approved.'; msg.hidden = false; }
+      })
+      .catch(function (err) {
+        msg.textContent = err.message.replace(/^Error:\s*/, '');
+        msg.hidden = false;
+        btn.disabled = false;
+      });
   });
 
   /* ----------------------------------------------------------------------

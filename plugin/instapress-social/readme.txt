@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.7.3
+Stable tag: 1.8.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -17,6 +17,7 @@ An instapress-social archive of your own posts — and a feed of the people you 
 * Per-post aspect ratio — Auto, 1:1, 4:5, 3:4, 1.91:1, 9:16 or Original. Auto uses the first image, kept within 4:5…1.91:1; every carousel slide is cropped to the post's ratio.
 * Grid tiles square (classic) or 3:4 / 4:5 portrait (Settings).
 * Following: the Follow button on a profile copies its feed link (/feed/insta/). Paste it into instapress-social → Following on your own site and their posts appear in your home feed at /gram/home/, refreshed hourly.
+* Likes and comments on WordPress's own comment system: Instagram-style comment panel with replies, moderation/Akismet/notifications as usual; likes for visitors without accounts (one per browser), double-tap to like.
 * Stories: photos/videos that disappear after 24 hours (configurable), shown in a full-screen viewer from your profile picture and the home feed's stories row. They're shared with followers through the same feed, and expired stories are archived privately (or deleted).
 * "Get instapress-social" button: visitors can download the exact plugin version installed on your site.
 * Hashtags link to your own grid filtered by tag (/gram/?hashtag=film); @mentions link to people you follow.
@@ -43,6 +44,13 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.8.0 =
+* Comments: real WordPress comments on posts — shown beside the photo and in the grid pop-up, with replies. Discussion settings, moderation, Akismet and notification emails all apply. Imported Instagram comments show as "N earlier comments on Instagram".
+* Likes: visitors can like posts (no account needed, one like per browser; tap again to unlike; double-tap the photo). Stored as WordPress comments of type "Likes", filterable on the Comments screen and kept out of comment lists and counts. Totals add imported Instagram likes.
+* Settings → Likes & comments to turn either off. Comments on existing posts are opened once.
+* If the Disable Comments plugin is switching comments off everywhere, a notice explains how to allow them on instapress-social posts only.
+* The feed now reports total likes and comments.
 
 = 1.7.3 =
 * Media type now follows the gallery automatically on save (one video = Video, several items = Carousel), and existing posts are corrected once — hand-made video posts now show in Reels and get poster checks.

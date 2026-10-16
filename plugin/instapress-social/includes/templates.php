@@ -144,6 +144,8 @@ add_action( 'wp_enqueue_scripts', function () {
 	wp_localize_script( 'instapress-social', 'IAR', array(
 		'hashtagBase' => iar_profile_url(),
 		'people'      => iar_known_people(),
+		'ajax'        => admin_url( 'admin-ajax.php' ),
+		'likes'       => iar_likes_enabled(),
 	) );
 } );
 

@@ -54,7 +54,11 @@ $long    = mb_strlen( $caption ) > 125 || substr_count( $caption, "\n" ) > 1;
 
 	<div class="card__body">
 		<div class="post__actions">
-			<button class="icon-btn" data-action="like" aria-label="<?php esc_attr_e( 'Like', 'instapress-social' ); ?>"><?php echo iar_icon( 'heart' ); // phpcs:ignore ?></button>
+			<?php if ( $own && ! empty( $item['post_id'] ) && iar_likes_enabled() ) : ?>
+				<button class="icon-btn" data-action="like" data-post-id="<?php echo (int) $item['post_id']; ?>" aria-label="<?php esc_attr_e( 'Like', 'instapress-social' ); ?>"><?php echo iar_icon( 'heart' ); // phpcs:ignore ?></button>
+			<?php elseif ( ! $own ) : ?>
+				<a class="icon-btn" href="<?php echo esc_url( $item['url'] ); ?>" rel="noopener" aria-label="<?php esc_attr_e( 'Like on their site', 'instapress-social' ); ?>"><?php echo iar_icon( 'heart' ); // phpcs:ignore ?></a>
+			<?php endif; ?>
 			<a class="icon-btn" href="<?php echo esc_url( $item['url'] ); ?>" aria-label="<?php esc_attr_e( 'Comment', 'instapress-social' ); ?>"><?php echo iar_icon( 'comment' ); // phpcs:ignore ?></a>
 			<button class="icon-btn" data-action="share" data-url="<?php echo esc_url( $item['url'] ); ?>" aria-label="<?php esc_attr_e( 'Share', 'instapress-social' ); ?>"><?php echo iar_icon( 'share' ); // phpcs:ignore ?></button>
 			<button class="icon-btn" data-action="save" aria-label="<?php esc_attr_e( 'Save', 'instapress-social' ); ?>"><?php echo iar_icon( 'bookmark' ); // phpcs:ignore ?></button>

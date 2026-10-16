@@ -21,6 +21,8 @@ function iar_defaults() {
 		'use_templates'   => 1,
 		'isolate_styles'  => 1,
 		'share_plugin'    => 1,
+		'allow_comments'  => 1,
+		'allow_likes'     => 1,
 		'story_hours'     => 24,
 		'story_after'     => 'archive',
 	);
@@ -59,6 +61,8 @@ add_action( 'admin_init', function () {
 				'use_templates'  => empty( $in['use_templates'] ) ? 0 : 1,
 				'isolate_styles' => empty( $in['isolate_styles'] ) ? 0 : 1,
 				'share_plugin'   => empty( $in['share_plugin'] ) ? 0 : 1,
+				'allow_comments' => empty( $in['allow_comments'] ) ? 0 : 1,
+				'allow_likes'    => empty( $in['allow_likes'] ) ? 0 : 1,
 				'story_hours'    => max( 1, min( 168, absint( $in['story_hours'] ?? 24 ) ) ),
 				'story_after'    => 'delete' === ( $in['story_after'] ?? '' ) ? 'delete' : 'archive',
 			);
@@ -146,6 +150,22 @@ function iar_render_settings() {
 						</p>
 						<br>
 						<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[isolate_styles]" value="1" <?php checked( $s['isolate_styles'] ); ?>> <?php esc_html_e( 'Don\'t load the theme\'s stylesheets on these pages', 'instapress-social' ); ?></label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Likes & comments', 'instapress-social' ); ?></th>
+					<td>
+						<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[allow_likes]" value="1" <?php checked( $s['allow_likes'] ); ?>> <?php esc_html_e( 'Visitors can like posts (no account needed; one like per browser)', 'instapress-social' ); ?></label><br>
+						<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[allow_comments]" value="1" <?php checked( $s['allow_comments'] ); ?>> <?php esc_html_e( 'Allow comments on posts', 'instapress-social' ); ?></label>
+						<p class="description">
+							<?php
+							printf(
+								/* translators: %s: link to Discussion settings */
+								esc_html__( 'Comments follow your %s (approval, required name/email, etc.) and are managed under Comments. Likes are listed there too, under the "Likes" type.', 'instapress-social' ),
+								'<a href="' . esc_url( admin_url( 'options-discussion.php' ) ) . '">' . esc_html__( 'Discussion settings', 'instapress-social' ) . '</a>'
+							);
+							?>
+						</p>
 					</td>
 				</tr>
 				<tr>

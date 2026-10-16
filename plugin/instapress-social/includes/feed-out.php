@@ -43,8 +43,9 @@ function iar_post_to_item( $post ) {
 		'caption'  => iar_get_caption( $post->ID ),
 		'ratio'    => iar_aspect_ratio( $post->ID ),
 		'type'     => (string) iar_field( 'media_type', $post->ID ) ?: ( count( $media ) > 1 ? 'carousel' : 'image' ),
-		'likes'    => (int) iar_field( 'likes', $post->ID ),
-		'comments' => (int) iar_field( 'comments', $post->ID ),
+		'likes'    => iar_like_total( $post->ID ),
+		'comments' => iar_comment_total( $post->ID ),
+		'post_id'  => $post->ID,
 		'location' => (string) iar_field( 'location', $post->ID ),
 		'media'    => $media,
 	);

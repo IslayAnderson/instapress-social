@@ -14,7 +14,7 @@ iar_template_part( 'header', array( 'topbar_title' => __( 'Post', 'instapress-so
 while ( have_posts() ) :
 	the_post();
 	$media    = iar_get_media();
-	$likes    = (int) iar_field( 'likes' );
+	$likes    = iar_like_total( get_the_ID() );
 	$location = iar_field( 'location' );
 	$caption  = iar_get_caption();
 	$date_c   = get_post_time( 'c', true );
@@ -24,7 +24,7 @@ while ( have_posts() ) :
 	?>
 		<div class="container single" data-profile data-username="<?php echo esc_attr( $iar['username'] ); ?>" data-avatar="<?php echo esc_url( iar_avatar_url() ); ?>" data-profile-url="<?php echo esc_url( iar_profile_url() ); ?>">
 
-			<article class="post" style="--ar: <?php echo esc_attr( iar_aspect_ratio() ); ?>">
+			<article class="post" data-post-id="<?php the_ID(); ?>" style="--ar: <?php echo esc_attr( iar_aspect_ratio() ); ?>">
 				<div class="post__media">
 					<div class="carousel">
 						<div class="carousel__track">
@@ -66,16 +66,20 @@ while ( have_posts() ) :
 								<div class="comment__meta"><time datetime="<?php echo esc_attr( $date_c ); ?>"><?php echo esc_html( $date ); ?></time></div>
 							</div>
 						</div>
+						<div class="comments" data-comments><?php echo iar_comments_html( get_the_ID() ); // phpcs:ignore -- escaped inside ?></div>
 					</div>
 					<footer class="post__footer">
 						<div class="post__actions">
-							<button class="icon-btn" data-action="like" aria-label="<?php esc_attr_e( 'Like', 'instapress-social' ); ?>"><?php echo iar_icon( 'heart' ); // phpcs:ignore ?></button>
-							<button class="icon-btn" aria-label="<?php esc_attr_e( 'Comment', 'instapress-social' ); ?>"><?php echo iar_icon( 'comment' ); // phpcs:ignore ?></button>
+							<?php if ( iar_likes_enabled() ) : ?>
+								<button class="icon-btn" data-action="like" data-post-id="<?php the_ID(); ?>" aria-label="<?php esc_attr_e( 'Like', 'instapress-social' ); ?>"><?php echo iar_icon( 'heart' ); // phpcs:ignore ?></button>
+							<?php endif; ?>
+							<button class="icon-btn" data-action="comment" aria-label="<?php esc_attr_e( 'Comment', 'instapress-social' ); ?>"><?php echo iar_icon( 'comment' ); // phpcs:ignore ?></button>
 							<button class="icon-btn" aria-label="<?php esc_attr_e( 'Share', 'instapress-social' ); ?>" data-action="share"><?php echo iar_icon( 'share' ); // phpcs:ignore ?></button>
 							<button class="icon-btn" data-action="save" aria-label="<?php esc_attr_e( 'Save', 'instapress-social' ); ?>"><?php echo iar_icon( 'bookmark' ); // phpcs:ignore ?></button>
 						</div>
 						<p class="post__likes" data-likes-count="<?php echo esc_attr( $likes ); ?>"><?php echo esc_html( sprintf( _n( '%s like', '%s likes', $likes, 'instapress-social' ), iar_count( $likes ) ) ); ?></p>
 						<a class="post__date" href="<?php the_permalink(); ?>"><time datetime="<?php echo esc_attr( $date_c ); ?>"><?php echo esc_html( $date ); ?></time></a>
+						<?php echo iar_comment_form_html( get_the_ID() ); // phpcs:ignore -- escaped inside ?>
 					</footer>
 				</div>
 			</article>

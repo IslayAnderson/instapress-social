@@ -457,3 +457,42 @@ body.story-open #wpadminbar { display: none; } /* logged-in admins: keep the bar
   .story-viewer { background: #000; }
   .story-viewer__frame { height: 100dvh; width: 100vw; aspect-ratio: auto; border-radius: 0; }
 }
+
+/* --------------------------------------------------------------------------
+   Comments & likes
+   -------------------------------------------------------------------------- */
+.comments { margin-top: 4px; }
+.comments__earlier { margin: 0 0 14px 46px; font-size: 13px; color: var(--text-muted); }
+.comments__earlier a { color: var(--text-muted); }
+.comment__reply { margin-left: 12px; color: var(--text-muted); font-size: 12px; font-weight: 600; }
+.comment__pending { margin-left: 8px; font-style: italic; }
+.comment__replies { margin-top: 12px; }
+.comment__replies .comment { margin-bottom: 12px; }
+.comment__replies .avatar { width: 24px; height: 24px; }
+
+.comment-form { border-top: 1px solid var(--border); margin: 10px -16px -12px; padding: 6px 16px; }
+.comment-form__row { display: flex; align-items: center; gap: 8px; }
+.comment-form__input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--text); font: inherit; padding: 8px 0; outline: none; }
+.comment-form__post { color: var(--accent); font-weight: 600; }
+.comment-form__post:disabled { opacity: .4; cursor: default; }
+.comment-form__who { display: flex; gap: 8px; padding-top: 6px; }
+.comment-form__who[hidden] { display: none; }
+.comment-form__who input { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; font-size: 13px; padding: 6px 8px; }
+.comment-form__msg { margin: 2px 0 4px; font-size: 12px; color: var(--text-muted); }
+.comment-login { margin: 8px 0 0; font-size: 13px; }
+.comment-login a { color: var(--accent); font-weight: 600; }
+
+.icon-btn.is-liked { color: #ff3040; }
+.icon-btn.is-pop { animation: iar-pop .35s ease; }
+@keyframes iar-pop { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+.card__media { position: relative; }
+.like-burst {
+  position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center;
+  color: #fff; pointer-events: none; animation: iar-burst .9s ease forwards;
+}
+.like-burst .icon { width: 96px; height: 96px; filter: drop-shadow(0 2px 12px rgba(0,0,0,.35)); }
+@keyframes iar-burst {
+  0% { transform: scale(.3); opacity: 0; } 15% { transform: scale(1.15); opacity: .95; }
+  30% { transform: scale(1); } 80% { opacity: .95; } 100% { transform: scale(1); opacity: 0; }
+}
