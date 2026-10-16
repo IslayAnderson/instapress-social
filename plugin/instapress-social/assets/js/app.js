@@ -397,6 +397,7 @@
         if (!res.success) return;
         if (list) list.innerHTML = res.data.comments;
         if (slot) slot.innerHTML = res.data.form;
+        showCommentingAs(post);
         setLikes(post, res.data.likes);
       })
       .catch(function () {});
@@ -405,10 +406,7 @@
   document.addEventListener('input', function (e) {
     var input = e.target.closest('.comment-form__input');
     if (!input) return;
-    var form = input.form;
-    form.querySelector('.comment-form__post').disabled = !input.value.trim();
-    var who = form.querySelector('[data-comment-who]');
-    if (who && input.value.trim()) who.hidden = false;
+    input.form.querySelector('.comment-form__post').disabled = !input.value.trim();
   });
 
   document.addEventListener('click', function (e) {
@@ -425,17 +423,110 @@
     form.querySelector('.comment-form__post').disabled = false;
   });
 
-  document.addEventListener('submit', function (e) {
-    var form = e.target.closest('[data-comment-form]');
-    if (!form) return;
-    e.preventDefault();
+  /* Visitors comment without an account: the first time, a pop-up asks for an
+     email (required, never shown) and an optional name ("Anonymous" if blank).
+     Remembered in this browser if they tick "Remember me". */
+  var IDENTITY_KEY = 'iar_commenter';
+  var sessionIdentity = null;
+
+  function getIdentity() {
+    if (sessionIdentity) return sessionIdentity;
+    try { var v = JSON.parse(localStorage.getItem(IDENTITY_KEY) || 'null'); return v && v.email ? v : null; } catch (e) { return null; }
+  }
+  function setIdentity(id, remember) {
+    sessionIdentity = id;
+    try { remember ? localStorage.setItem(IDENTITY_KEY, JSON.stringify(id)) : localStorage.removeItem(IDENTITY_KEY); } catch (e) {}
+    showCommentingAs();
+  }
+  function clearIdentity() {
+    sessionIdentity = null;
+    try { localStorage.removeItem(IDENTITY_KEY); } catch (e) {}
+    showCommentingAs();
+  }
+  function showCommentingAs(root) {
+    var id = getIdentity();
+    (root || document).querySelectorAll('[data-comment-form][data-guest] [data-comment-as]').forEach(function (p) {
+      p.hidden = !id;
+      if (id) p.querySelector('span').textContent = (id.name || 'Anonymous') + ' (' + id.email + ')';
+    });
+  }
+
+  var emailModal = null, pendingForm = null;
+  function buildEmailModal() {
+    if (emailModal) return emailModal;
+    emailModal = document.createElement('div');
+    emailModal.className = 'email-modal';
+    emailModal.hidden = true;
+    emailModal.setAttribute('role', 'dialog');
+    emailModal.setAttribute('aria-modal', 'true');
+    emailModal.setAttribute('aria-labelledby', 'iar-email-title');
+    emailModal.innerHTML =
+      '<form class="email-modal__box" novalidate>' +
+        '<h2 id="iar-email-title">Add your email to comment</h2>' +
+        '<p class="email-modal__note">You don’t need an account. Your email isn’t shown — it’s only used to show your Gravatar picture and if the site owner needs to reach you.</p>' +
+        '<label class="email-modal__field">Email<input type="email" name="email" required autocomplete="email" placeholder="you@example.com"></label>' +
+        '<label class="email-modal__field">Name <span>(optional)</span><input type="text" name="name" autocomplete="name" maxlength="60" placeholder="Anonymous"></label>' +
+        '<label class="email-modal__check"><input type="checkbox" name="remember" checked> Remember me on this device</label>' +
+        '<p class="email-modal__error" hidden></p>' +
+        '<div class="email-modal__actions">' +
+          '<button type="button" class="btn" data-email-cancel>Cancel</button>' +
+          '<button type="submit" class="btn btn--primary" data-email-ok>Post comment</button>' +
+        '</div>' +
+      '</form>';
+    document.body.appendChild(emailModal);
+
+    var box = emailModal.querySelector('form');
+    emailModal.addEventListener('click', function (e) { if (e.target === emailModal || e.target.closest('[data-email-cancel]')) closeEmailModal(); });
+    box.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = box.elements.email, err = box.querySelector('.email-modal__error');
+      if (!email.value.trim() || !email.checkValidity()) {
+        err.textContent = 'Please enter a valid email address.';
+        err.hidden = false;
+        email.focus();
+        return;
+      }
+      setIdentity({ email: email.value.trim(), name: box.elements.name.value.trim() }, box.elements.remember.checked);
+      var form = pendingForm;
+      closeEmailModal();
+      if (form) sendComment(form);
+    });
+    document.addEventListener('keydown', function (e) { if (!emailModal.hidden && e.key === 'Escape') { e.stopPropagation(); closeEmailModal(); } }, true);
+    return emailModal;
+  }
+  function openEmailModal(form, editing) {
+    var m = buildEmailModal(), box = m.querySelector('form'), id = getIdentity() || {};
+    pendingForm = editing ? null : form;
+    box.elements.email.value = id.email || '';
+    box.elements.name.value = id.name || '';
+    box.querySelector('.email-modal__error').hidden = true;
+    box.querySelector('[data-email-ok]').textContent = editing ? 'Save' : 'Post comment';
+    m.hidden = false;
+    document.body.classList.add('email-modal-open');
+    box.elements.email.focus();
+  }
+  function closeEmailModal() {
+    if (!emailModal) return;
+    emailModal.hidden = true;
+    document.body.classList.remove('email-modal-open');
+    var form = pendingForm;
+    pendingForm = null;
+    if (form) form.querySelector('.comment-form__post').disabled = !form.querySelector('.comment-form__input').value.trim();
+  }
+
+  document.addEventListener('click', function (e) {
+    var change = e.target.closest('[data-comment-change]');
+    if (change) openEmailModal(change.closest('[data-comment-form]'), true);
+  });
+
+  function sendComment(form) {
     var msg = form.querySelector('[data-comment-msg]');
-    var who = form.querySelector('[data-comment-who]');
     var btn = form.querySelector('.comment-form__post');
-    // Guests: ask for name/email the first time.
-    if (who && who.hidden === false) {
-      var missing = Array.prototype.find.call(who.querySelectorAll('input[required]'), function (i) { return !i.value.trim(); });
-      if (missing) { missing.focus(); return; }
+    if (form.hasAttribute('data-guest')) {
+      var id = getIdentity();
+      if (!id) { openEmailModal(form); return; }
+      form.elements.author.value = id.name || '';
+      form.elements.email.value = id.email;
     }
     btn.disabled = true;
     msg.hidden = true;
@@ -444,7 +535,10 @@
     fetch(CFG.ajax, { method: 'POST', body: body, credentials: 'same-origin' })
       .then(function (r) { return r.json(); })
       .then(function (res) {
-        if (!res.success) throw new Error(res.data || 'Couldn\'t post your comment.');
+        if (!res.success) {
+          if (res.data && res.data.code === 'need_email') { clearIdentity(); openEmailModal(form); return; }
+          throw new Error((res.data && res.data.message) || res.data || 'Couldn\'t post your comment.');
+        }
         var post = form.closest('.post, .card');
         var list = post.querySelector('[data-comments]');
         var holder = document.createElement('div');
@@ -463,15 +557,24 @@
         input.value = '';
         input.placeholder = 'Add a comment…';
         form.elements.comment_parent.value = '0';
-        if (who) who.hidden = true;
         if (!res.data.approved) { msg.textContent = 'Thanks — your comment will appear once it\'s approved.'; msg.hidden = false; }
       })
       .catch(function (err) {
-        msg.textContent = err.message.replace(/^Error:\s*/, '');
+        msg.textContent = String(err.message || err).replace(/^Error:\s*/, '');
         msg.hidden = false;
         btn.disabled = false;
       });
+  }
+
+  document.addEventListener('submit', function (e) {
+    var form = e.target.closest('[data-comment-form]');
+    if (!form) return;
+    e.preventDefault();
+    if (!form.querySelector('.comment-form__input').value.trim()) return;
+    sendComment(form);
   });
+
+  showCommentingAs();
 
   /* ----------------------------------------------------------------------
      Follow: copy this profile's feed link for the visitor to paste into

@@ -46,7 +46,7 @@ Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use
 == Changelog ==
 
 = 1.8.0 =
-* Comments: real WordPress comments on posts — shown beside the photo and in the grid pop-up, with replies. Discussion settings, moderation, Akismet and notification emails all apply. Imported Instagram comments show as "N earlier comments on Instagram".
+* Comments: real WordPress comments on posts — shown beside the photo and in the grid pop-up, with replies. Visitors comment without an account: the first time, a pop-up asks for their email (required, never shown) and an optional name — blank posts as "Anonymous" — and can remember them on that device. Discussion settings, moderation, Akismet and notification emails all apply. Imported Instagram comments show as "N earlier comments on Instagram".
 * Likes: visitors can like posts (no account needed, one like per browser; tap again to unlike; double-tap the photo). Stored as WordPress comments of type "Likes", filterable on the Comments screen and kept out of comment lists and counts. Totals add imported Instagram likes.
 * Settings → Likes & comments to turn either off. Comments on existing posts are opened once.
 * If the Disable Comments plugin is switching comments off everywhere, a notice explains how to allow them on instapress-social posts only.

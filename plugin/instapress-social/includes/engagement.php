@@ -323,24 +323,25 @@ function iar_comment_form_html( $post_id ) {
 	if ( get_option( 'comment_registration' ) && ! is_user_logged_in() ) {
 		return '<p class="comment-login"><a href="' . esc_url( wp_login_url( get_permalink( $post_id ) ) ) . '">' . esc_html__( 'Log in to comment', 'instapress-social' ) . '</a></p>';
 	}
-	$commenter = wp_get_current_commenter();
-	$need_name = ! is_user_logged_in() && get_option( 'require_name_email' );
+	$guest = ! is_user_logged_in();
 	ob_start();
 	?>
-	<form class="comment-form" data-comment-form novalidate>
+	<form class="comment-form" data-comment-form <?php echo $guest ? 'data-guest' : ''; ?> novalidate>
 		<input type="hidden" name="comment_post_ID" value="<?php echo (int) $post_id; ?>">
 		<input type="hidden" name="comment_parent" value="0">
-		<?php if ( ! is_user_logged_in() ) : ?>
-			<div class="comment-form__who" <?php echo $commenter['comment_author'] ? 'hidden' : ''; ?> data-comment-who>
-				<input type="text" name="author" placeholder="<?php esc_attr_e( 'Name', 'instapress-social' ); ?>" value="<?php echo esc_attr( $commenter['comment_author'] ); ?>" <?php echo $need_name ? 'required' : ''; ?> autocomplete="name">
-				<input type="email" name="email" placeholder="<?php esc_attr_e( 'Email (not shown)', 'instapress-social' ); ?>" value="<?php echo esc_attr( $commenter['comment_author_email'] ); ?>" <?php echo $need_name ? 'required' : ''; ?> autocomplete="email">
-			</div>
+		<?php if ( $guest ) : ?>
+			<?php // Filled from the email pop-up (assets/js/app.js) — visitors don't need an account. ?>
+			<input type="hidden" name="author" value="">
+			<input type="hidden" name="email" value="">
 		<?php endif; ?>
 		<div class="comment-form__row">
 			<input type="text" name="comment" class="comment-form__input" placeholder="<?php esc_attr_e( 'Add a comment…', 'instapress-social' ); ?>" aria-label="<?php esc_attr_e( 'Add a comment', 'instapress-social' ); ?>" maxlength="2000" required autocomplete="off">
 			<button type="submit" class="comment-form__post" disabled><?php esc_html_e( 'Post', 'instapress-social' ); ?></button>
 		</div>
 		<p class="comment-form__msg" data-comment-msg hidden></p>
+		<?php if ( $guest ) : ?>
+			<p class="comment-form__as" data-comment-as hidden><?php esc_html_e( 'Commenting as', 'instapress-social' ); ?> <span></span> · <button type="button" data-comment-change><?php esc_html_e( 'change', 'instapress-social' ); ?></button></p>
+		<?php endif; ?>
 	</form>
 	<?php
 	return ob_get_clean();
@@ -371,7 +372,22 @@ function iar_ajax_post_comment() {
 	if ( ! iar_comments_enabled() || IAR_POST_TYPE !== get_post_type( $post_id ) ) {
 		wp_send_json_error( __( 'Comments are closed.', 'instapress-social' ), 403 );
 	}
-	$comment = wp_handle_comment_submission( wp_unslash( $_POST ) ); // phpcs:ignore WordPress.Security.NonceVerification
+	$data = wp_unslash( $_POST ); // phpcs:ignore WordPress.Security.NonceVerification
+
+	// Visitors comment anonymously: an email is required (never shown), a name is optional.
+	if ( ! is_user_logged_in() ) {
+		$data['email'] = sanitize_email( (string) ( $data['email'] ?? '' ) );
+		if ( ! is_email( $data['email'] ) ) {
+			wp_send_json_error( array( 'code' => 'need_email', 'message' => __( 'Please add your email to comment.', 'instapress-social' ) ), 400 );
+		}
+		$data['author'] = trim( sanitize_text_field( (string) ( $data['author'] ?? '' ) ) );
+		if ( '' === $data['author'] ) {
+			$data['author'] = __( 'Anonymous', 'instapress-social' );
+		}
+		$data['url'] = '';
+	}
+
+	$comment = wp_handle_comment_submission( $data );
 	if ( is_wp_error( $comment ) ) {
 		wp_send_json_error( wp_strip_all_tags( $comment->get_error_message() ), 400 );
 	}
