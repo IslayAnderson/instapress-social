@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.5.1
+Stable tag: 1.5.2
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -41,6 +41,9 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.5.2 =
+* Now licensed under the MIT License (replaces the WTFPL).
 
 = 1.5.1 =
 * Now licensed under the WTFPL (LICENSE file included).
