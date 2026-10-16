@@ -1,0 +1,115 @@
+<?php
+/**
+ * Single post page: media carousel + caption panel, then more posts.
+ *
+ * Override by copying to <theme>/instapress-social/single.php.
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+$iar = iar_settings();
+
+iar_template_part( 'header', array( 'topbar_title' => __( 'Post', 'instapress-social' ), 'back' => true ) );
+
+while ( have_posts() ) :
+	the_post();
+	$media    = iar_get_media();
+	$likes    = (int) iar_field( 'likes' );
+	$location = iar_field( 'location' );
+	$caption  = iar_get_caption();
+	$date_c   = get_post_time( 'c', true );
+	$date     = get_the_date();
+	$ig_url   = iar_field( 'url' );
+	$current  = get_the_ID();
+	?>
+		<div class="container single" data-profile data-username="<?php echo esc_attr( $iar['username'] ); ?>" data-avatar="<?php echo esc_url( iar_avatar_url() ); ?>" data-profile-url="<?php echo esc_url( iar_profile_url() ); ?>">
+
+			<article class="post" style="--ar: <?php echo esc_attr( iar_aspect_ratio() ); ?>">
+				<div class="post__media">
+					<div class="carousel">
+						<div class="carousel__track">
+							<?php foreach ( $media as $m ) : ?>
+								<div class="carousel__slide">
+									<?php if ( 'video' === $m['type'] ) : ?>
+										<video src="<?php echo esc_url( $m['src'] ); ?>"<?php echo $m['poster'] ? ' poster="' . esc_url( $m['poster'] ) . '"' : ''; ?> controls playsinline preload="metadata"></video>
+									<?php else : ?>
+										<?php echo wp_get_attachment_image( $m['id'], 'large', false, array( 'alt' => '' ) ); ?>
+									<?php endif; ?>
+								</div>
+							<?php endforeach; ?>
+						</div>
+						<?php if ( count( $media ) > 1 ) : ?>
+							<button class="carousel__nav carousel__nav--prev" aria-label="<?php esc_attr_e( 'Previous', 'instapress-social' ); ?>"><?php echo iar_icon( 'chevron-left' ); // phpcs:ignore ?></button>
+							<button class="carousel__nav carousel__nav--next" aria-label="<?php esc_attr_e( 'Next', 'instapress-social' ); ?>"><?php echo iar_icon( 'chevron-right' ); // phpcs:ignore ?></button>
+							<div class="carousel__dots"><?php echo str_repeat( '<span class="carousel__dot"></span>', count( $media ) ); // phpcs:ignore ?></div>
+						<?php endif; ?>
+					</div>
+				</div>
+				<div class="post__panel">
+					<header class="post__header">
+						<img class="avatar" src="<?php echo esc_url( iar_avatar_url() ); ?>" alt="">
+						<div>
+							<a class="post__user" href="<?php echo esc_url( iar_profile_url() ); ?>"><?php echo esc_html( $iar['username'] ); ?></a>
+							<?php if ( $location ) : ?>
+								<span class="post__location"><?php echo esc_html( $location ); ?></span>
+							<?php endif; ?>
+						</div>
+						<?php if ( $ig_url ) : ?>
+							<a class="post__more icon-btn" href="<?php echo esc_url( $ig_url ); ?>" rel="noopener" aria-label="<?php esc_attr_e( 'View original post', 'instapress-social' ); ?>"><?php echo iar_icon( 'more' ); // phpcs:ignore ?></a>
+						<?php endif; ?>
+					</header>
+					<div class="post__body">
+						<div class="comment">
+							<img class="avatar" src="<?php echo esc_url( iar_avatar_url() ); ?>" alt="">
+							<div>
+								<p class="comment__text"><a class="post__user" href="<?php echo esc_url( iar_profile_url() ); ?>"><?php echo esc_html( $iar['username'] ); ?></a><?php echo iar_format_caption( $caption ); // phpcs:ignore -- escaped inside ?></p>
+								<div class="comment__meta"><time datetime="<?php echo esc_attr( $date_c ); ?>"><?php echo esc_html( $date ); ?></time></div>
+							</div>
+						</div>
+					</div>
+					<footer class="post__footer">
+						<div class="post__actions">
+							<button class="icon-btn" data-action="like" aria-label="<?php esc_attr_e( 'Like', 'instapress-social' ); ?>"><?php echo iar_icon( 'heart' ); // phpcs:ignore ?></button>
+							<button class="icon-btn" aria-label="<?php esc_attr_e( 'Comment', 'instapress-social' ); ?>"><?php echo iar_icon( 'comment' ); // phpcs:ignore ?></button>
+							<button class="icon-btn" aria-label="<?php esc_attr_e( 'Share', 'instapress-social' ); ?>" data-action="share"><?php echo iar_icon( 'share' ); // phpcs:ignore ?></button>
+							<button class="icon-btn" data-action="save" aria-label="<?php esc_attr_e( 'Save', 'instapress-social' ); ?>"><?php echo iar_icon( 'bookmark' ); // phpcs:ignore ?></button>
+						</div>
+						<p class="post__likes" data-likes-count="<?php echo esc_attr( $likes ); ?>"><?php echo esc_html( sprintf( _n( '%s like', '%s likes', $likes, 'instapress-social' ), iar_count( $likes ) ) ); ?></p>
+						<a class="post__date" href="<?php the_permalink(); ?>"><time datetime="<?php echo esc_attr( $date_c ); ?>"><?php echo esc_html( $date ); ?></time></a>
+					</footer>
+				</div>
+			</article>
+
+			<?php
+			$related = new WP_Query( array(
+				'post_type'      => IAR_POST_TYPE,
+				'posts_per_page' => 6,
+				'post__not_in'   => array( $current ),
+				'no_found_rows'  => true,
+			) );
+			if ( $related->have_posts() ) :
+				?>
+				<section class="single__more">
+					<h2><?php
+						printf(
+							/* translators: %s: username */
+							esc_html__( 'More posts from %s', 'instapress-social' ),
+							'<a href="' . esc_url( iar_profile_url() ) . '">' . esc_html( $iar['username'] ) . '</a>'
+						);
+					?></h2>
+					<div class="grid" style="--tile-ar: <?php echo esc_attr( iar_grid_ratio() ); ?>">
+						<?php
+						while ( $related->have_posts() ) :
+							$related->the_post();
+							iar_template_part( 'grid-item' );
+						endwhile;
+						wp_reset_postdata();
+						?>
+					</div>
+				</section>
+			<?php endif; ?>
+		</div>
+	<?php
+endwhile;
+
+iar_template_part( 'footer' );

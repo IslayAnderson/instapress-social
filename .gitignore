@@ -1,0 +1,9 @@
+# Personal data: scraped posts and downloaded photos/videos
+import/
+
+# Build output — zips are attached to GitHub Releases
+dist/
+
+# Local tooling / OS junk
+.claude/
+.DS_Store
