@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.10.0
+Stable tag: 1.11.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -44,6 +44,9 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.11.0 =
+* "Regenerate all posters" on the Import page: recaptures a frame from every video (choose the moment, e.g. 1 second in) and replaces its poster. Posters made by the plugin before are deleted; cover images imported from Instagram are kept. Single-video posts' featured images follow the new poster.
 
 = 1.10.0 =
 * Bot protection can now use Google reCAPTCHA v3 (invisible, score-based, with a minimum-score setting) or reCAPTCHA v2 invisible, as well as Cloudflare Turnstile. Choose under Settings → instapress-social → Bot protection; each provider has its own keys. Existing Turnstile setups carry on unchanged.

@@ -75,6 +75,41 @@ function iar_post_videos_missing_posters( $post_id ) {
 	return $out;
 }
 
+/** Every video in every post, with or without a poster. */
+function iar_all_videos() {
+	$out = array();
+	foreach ( get_posts( array( 'post_type' => IAR_POST_TYPE, 'post_status' => 'any', 'posts_per_page' => -1, 'fields' => 'ids' ) ) as $post_id ) {
+		$ids = array_values( array_filter( array_map( 'absint', (array) iar_field( 'media', $post_id ) ) ) );
+		foreach ( $ids as $id ) {
+			if ( wp_attachment_is( 'video', $id ) ) {
+				$out[] = array(
+					'video_id' => $id,
+					'post_id'  => $post_id,
+					'url'      => wp_get_attachment_url( $id ),
+					'title'    => get_the_title( $post_id ),
+				);
+			}
+		}
+	}
+	return $out;
+}
+
+/**
+ * Was this attachment made by "Generate video posters" (so safe to delete
+ * when regenerating)? Flagged since 1.11; earlier ones are recognised by
+ * their "— poster" title, "-poster.jpg" file and parent post.
+ */
+function iar_is_generated_poster( $attachment_id, $post_id ) {
+	if ( get_post_meta( $attachment_id, '_iar_generated_poster', true ) ) {
+		return true;
+	}
+	$a = get_post( $attachment_id );
+	return $a && 'attachment' === $a->post_type
+		&& (int) $a->post_parent === (int) $post_id
+		&& '— poster' === mb_substr( $a->post_title, -8 )
+		&& preg_match( '/-poster(-\d+)?\.jpe?g$/i', (string) get_attached_file( $attachment_id ) );
+}
+
 /** Every video, in every post, that has no poster — regardless of "Media type". */
 function iar_videos_missing_posters() {
 	$out = array();
@@ -123,12 +158,25 @@ add_action( 'wp_ajax_iar_save_video_poster', function () {
 		wp_send_json_error( $att->get_error_message() );
 	}
 
+	update_post_meta( $att, '_iar_generated_poster', $video_id );
+
+	$old       = iar_own_thumbnail_id( $video_id );
+	$post_feat = iar_own_thumbnail_id( $post_id );
 	set_post_thumbnail( $video_id, $att );
-	// A post that is just this video uses the poster as its featured image too.
-	if ( 1 === count( $media ) && ! iar_own_thumbnail_id( $post_id ) ) {
+	// A post that is just this video uses the poster as its featured image too
+	// (or keeps using it, if its featured image was the poster being replaced).
+	if ( ( 1 === count( $media ) && ! $post_feat ) || ( $old && $post_feat === $old ) ) {
 		set_post_thumbnail( $post_id, $att );
 	}
-	wp_send_json_success( array( 'poster' => wp_get_attachment_image_url( $att, 'thumbnail' ) ) );
+	// Regenerating: drop the previous poster if we made it. Imported cover images are kept.
+	$removed = false;
+	if ( $old && $old !== $att && iar_is_generated_poster( $old, $post_id ) ) {
+		$removed = (bool) wp_delete_attachment( $old, true );
+	}
+	wp_send_json_success( array(
+		'poster'  => wp_get_attachment_image_url( $att, 'thumbnail' ),
+		'removed' => $removed,
+	) );
 } );
 
 /* -------------------------------------------------------------------------
@@ -140,11 +188,11 @@ function iar_enqueue_video_posters_js() {
 }
 
 /** Button + progress, driven by assets/js/video-posters.js. */
-function iar_video_posters_widget( $videos, $label ) {
+function iar_video_posters_widget( $videos, $label, $args = array() ) {
 	iar_enqueue_video_posters_js();
 	?>
-	<span data-iar-posters data-videos="<?php echo esc_attr( wp_json_encode( $videos ) ); ?>" data-nonce="<?php echo esc_attr( wp_create_nonce( 'iar_video_posters' ) ); ?>">
-		<button type="button" class="button button-primary" data-iar-posters-go><?php echo esc_html( $label ); ?></button>
+	<span data-iar-posters data-videos="<?php echo esc_attr( wp_json_encode( $videos ) ); ?>" data-nonce="<?php echo esc_attr( wp_create_nonce( 'iar_video_posters' ) ); ?>"<?php echo ! empty( $args['confirm'] ) ? ' data-confirm="' . esc_attr( $args['confirm'] ) . '"' : ''; ?><?php echo ! empty( $args['seek'] ) ? ' data-seek-input="' . esc_attr( $args['seek'] ) . '"' : ''; ?>>
+		<button type="button" class="button <?php echo empty( $args['secondary'] ) ? 'button-primary' : ''; ?>" data-iar-posters-go><?php echo esc_html( $label ); ?></button>
 		<span data-iar-posters-status style="margin-left:6px;"></span>
 		<span data-iar-posters-list style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></span>
 	</span>
@@ -154,26 +202,58 @@ function iar_video_posters_widget( $videos, $label ) {
 /** Section on the Import page. */
 function iar_render_video_posters() {
 	$missing = iar_videos_missing_posters();
+	$all     = iar_all_videos();
 	?>
 	<h2 id="iar-posters"><?php esc_html_e( 'Video posters', 'instapress-social' ); ?></h2>
-	<?php if ( ! $missing ) : ?>
-		<p><?php esc_html_e( 'Every video has a poster image.', 'instapress-social' ); ?></p>
+	<?php if ( ! $all ) : ?>
+		<p><?php esc_html_e( 'No videos yet.', 'instapress-social' ); ?></p>
 		<?php
 		return;
 	endif;
 	?>
+	<?php if ( $missing ) : ?>
+		<p style="max-width:720px;">
+			<?php
+			printf(
+				/* translators: %d: number of videos */
+				esc_html( _n( '%d video has no poster image, so it shows its first frame (or nothing, on some phones).', '%d videos have no poster image, so they show their first frame (or nothing, on some phones).', count( $missing ), 'instapress-social' ) ),
+				count( $missing )
+			);
+			echo ' ';
+			esc_html_e( 'Generate them here: your browser grabs a frame from each video and saves it as its poster. Keep this page open until it finishes.', 'instapress-social' );
+			?>
+		</p>
+		<div style="max-width:900px;margin-bottom:20px;"><?php iar_video_posters_widget( $missing, __( 'Generate missing posters', 'instapress-social' ), array( 'seek' => 'iar-poster-seek' ) ); ?></div>
+	<?php else : ?>
+		<p><?php esc_html_e( 'Every video has a poster image.', 'instapress-social' ); ?></p>
+	<?php endif; ?>
+
 	<p style="max-width:720px;">
 		<?php
 		printf(
 			/* translators: %d: number of videos */
-			esc_html( _n( '%d video has no poster image, so it shows its first frame (or nothing, on some phones).', '%d videos have no poster image, so they show their first frame (or nothing, on some phones).', count( $missing ), 'instapress-social' ) ),
-			count( $missing )
+			esc_html( _n( 'Regenerate replaces the poster of your %d video with a new frame — e.g. if a poster is black or blurry.', 'Regenerate replaces the posters of all %d videos with new frames — e.g. if some are black or blurry.', count( $all ), 'instapress-social' ) ),
+			count( $all )
 		);
 		echo ' ';
-		esc_html_e( 'Generate them here: your browser grabs a frame from each video and saves it as its poster. Keep this page open until it finishes.', 'instapress-social' );
+		esc_html_e( 'Posters made here before are deleted; cover images imported from Instagram stay in your media library.', 'instapress-social' );
 		?>
 	</p>
-	<div style="max-width:900px;"><?php iar_video_posters_widget( $missing, __( 'Generate video posters', 'instapress-social' ) ); ?></div>
+	<p>
+		<label for="iar-poster-seek"><?php esc_html_e( 'Use the frame at', 'instapress-social' ); ?></label>
+		<input type="number" id="iar-poster-seek" class="small-text" min="0" max="60" step="0.5" value="0.5">
+		<?php esc_html_e( 'seconds (shorter videos use their middle frame)', 'instapress-social' ); ?>
+	</p>
+	<div style="max-width:900px;">
+		<?php
+		iar_video_posters_widget( $all, __( 'Regenerate all posters', 'instapress-social' ), array(
+			'secondary' => true,
+			'seek'      => 'iar-poster-seek',
+			/* translators: %d: number of videos */
+			'confirm'   => sprintf( _n( 'Replace the poster of %d video with a new frame?', 'Replace the posters of all %d videos with new frames?', count( $all ), 'instapress-social' ), count( $all ) ),
+		) );
+		?>
+	</div>
 	<?php
 }
 
