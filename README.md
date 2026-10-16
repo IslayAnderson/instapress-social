@@ -40,4 +40,4 @@ python3 -m http.server 8765 --directory ui
 
 ## License
 
-[WTFPL](LICENSE) — do what you want with it.
+[MIT](LICENSE) © 2026 Islay Anderson.

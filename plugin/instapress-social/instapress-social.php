@@ -7,8 +7,8 @@
  * Requires PHP:      7.4
  * Author:            Islay Anderson
  * Author URI:        https://islayanderson.co.uk
- * License:           WTFPL
- * License URI:       http://www.wtfpl.net/
+ * License:           MIT
+ * License URI:       https://opensource.org/licenses/MIT
  * Text Domain:       instapress-social
  */
 
