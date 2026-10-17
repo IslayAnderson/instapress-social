@@ -13,7 +13,7 @@ An instapress-social archive of your own posts — and a feed of the people you 
 
 * `instapress-social` post type with ACF fields (ig_shortcode, ig_caption, ig_media, ig_media_type, ig_aspect_ratio, ig_posted_at, ig_likes, ig_comments, ig_location, ig_url = original URL).
 * Short-code permalinks — /p/DYLRvc7CC0h/ — with a "Generate shortcode" button on the edit screen. Generated codes encode the post date the same way real ones do.
-* Profile grid at /gram/ (posts + reels tabs, hover counts, post modal with carousel, load more) and a single post template.
+* Profile grid at /gram/ (posts + reels tabs, hover counts, load more) and a single post page with carousel.
 * Per-post aspect ratio — Auto, 1:1, 4:5, 3:4, 1.91:1, 9:16 or Original. Auto uses the first image, kept within 4:5…1.91:1; every carousel slide is cropped to the post's ratio.
 * Grid tiles square (classic) or 3:4 / 4:5 portrait (Settings).
 * Following: the Follow button on a profile copies its feed link (/feed/insta/). Paste it into instapress-social → Following on your own site and their posts appear in your home feed at /gram/home/, refreshed hourly.
