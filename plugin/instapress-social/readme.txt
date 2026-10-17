@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.14.0
+Stable tag: 1.15.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -45,9 +45,12 @@ Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use
 
 == Privacy ==
 
-When the plugin is set up (activated, or first run after updating), it sends one "plugin_setup" event to the plugin author's Google Analytics, so they know roughly how many sites use it. It contains the site's domain, the plugin and WordPress versions and the environment type (production, staging, local) — nothing about your visitors, posts or users. To turn it off, add `define( 'IAR_DISABLE_SETUP_EVENT', true );` to wp-config.php, or return false from the `iar_send_setup_event` filter.
+When the plugin is set up (activated, or first run after updating), it sends one "plugin_setup" event to the plugin author's Google Analytics, so they know roughly how many sites use it. To send it, the plugin first reads the Analytics details from blog.islayanderson.co.uk (a plain request; nothing about your site is included). It contains the site's domain, the plugin and WordPress versions and the environment type (production, staging, local) — nothing about your visitors, posts or users. To turn it off, add `define( 'IAR_DISABLE_SETUP_EVENT', true );` to wp-config.php, or return false from the `iar_send_setup_event` filter.
 
 == Changelog ==
+
+= 1.15.0 =
+* The Google Analytics API secret for the setup event is no longer built into the plugin: it's read from blog.islayanderson.co.uk when needed and cached for 12 hours. If it can't be fetched, nothing is sent and the event is retried later (at most hourly).
 
 = 1.14.0 =
 * When the plugin is set up (activated, or first run after this update) it sends one "plugin_setup" event — the site's domain, plugin and WordPress versions and environment type — to the plugin author's Google Analytics, to count installs. See Privacy for how to turn it off.
