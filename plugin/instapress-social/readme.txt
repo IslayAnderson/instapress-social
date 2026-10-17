@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.12.0
+Stable tag: 1.13.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -44,6 +44,9 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
 == Changelog ==
+
+= 1.13.0 =
+* Removed the pop-up post viewer: tapping a post in the profile grid now opens the post's own page. Likes, comments and the carousel work as before there.
 
 = 1.12.0 =
 * New phone-friendly way to post: tap + in the bottom bar (or New post on your profile) to open /gram/new/. Pick photos and videos, reorder them, choose the shape, add a caption and location, and share — or switch to Story. Videos get a poster captured automatically. Only logged-in users who can publish posts can use it; files picked but never shared are tidied up after a day.
@@ -88,7 +91,7 @@ Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use
 = 1.6.0 =
 * Stories: new Story post type (instapress-social → Stories) with photo/video, overlay text, link and display time.
 * Full-screen story viewer: progress bars, auto-advance, tap to skip, hold to pause, swipe down / Esc to close, video sound toggle; seen stories turn the ring grey.
-* Stories expire after 24 hours (Settings: 1–168h), then move to a private Expired archive or are deleted.
+* Stories expire after 24 hours (Settings: 1–336h), then move to a private Expired archive or are deleted.
 * Followers receive stories through /feed/insta/; the home feed shows rings for accounts with live stories and plays them one after another.
 
 = 1.5.2 =

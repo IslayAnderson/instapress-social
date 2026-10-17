@@ -1,26 +1,10 @@
 /**
  * Insta-style theme — front-end behaviour.
- *
- * Grid items carry their post data as data-* attributes so the modal can be
- * built without an extra request. In WordPress, the loop prints the same
- * attributes (templates/parts/grid-item.php).
- *
- *   data-media     JSON array: [{ "type": "image"|"video", "src": "...", "poster": "..." }]
- *   data-caption   plain text caption
- *   data-date      ISO 8601 date
- *   data-likes     integer
- *   data-comments  integer
- *   data-location  optional string
- *   data-ratio     frame width / height (e.g. 0.8 for 4:5)
  */
 (function () {
   'use strict';
 
   var CFG = window.IAR || { hashtagBase: location.pathname, people: {} };
-  var profile = document.querySelector('[data-profile]');
-  var username = profile ? profile.dataset.username : '';
-  var avatar = profile ? profile.dataset.avatar : '';
-  var profileUrl = profile ? (profile.dataset.profileUrl || '#') : '#';
 
   /* ----------------------------------------------------------------------
      Helpers
@@ -44,12 +28,6 @@
       });
   }
 
-  function formatDate(iso) {
-    var d = new Date(iso);
-    if (isNaN(d)) return '';
-    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
-  }
-
   function formatCount(n) {
     n = parseInt(n, 10) || 0;
     return n.toLocaleString();
@@ -60,7 +38,7 @@
   }
 
   /* ----------------------------------------------------------------------
-     Carousel — works on any .carousel in the page (modal + single.html)
+     Carousel — works on any .carousel in the page
      ---------------------------------------------------------------------- */
   function initCarousel(root) {
     if (!root || root.dataset.ready) return;
@@ -102,27 +80,6 @@
     go(0);
   }
 
-  function carouselHTML(media) {
-    var slides = media.map(function (m) {
-      if (m.type === 'video') {
-        return '<div class="carousel__slide"><video src="' + esc(m.src) + '"' +
-          (m.poster ? ' poster="' + esc(m.poster) + '"' : '') +
-          ' controls playsinline preload="metadata"></video></div>';
-      }
-      return '<div class="carousel__slide"><img src="' + esc(m.src) + '" alt="" loading="lazy"></div>';
-    }).join('');
-
-    var multi = media.length > 1;
-    return '<div class="carousel">' +
-      '<div class="carousel__track">' + slides + '</div>' +
-      (multi
-        ? '<button class="carousel__nav carousel__nav--prev" aria-label="Previous">' + icon('chevron-left') + '</button>' +
-          '<button class="carousel__nav carousel__nav--next" aria-label="Next">' + icon('chevron-right') + '</button>' +
-          '<div class="carousel__dots">' + media.map(function () { return '<span class="carousel__dot"></span>'; }).join('') + '</div>'
-        : '') +
-      '</div>';
-  }
-
   /* ----------------------------------------------------------------------
      Like / save toggles (purely visual)
      ---------------------------------------------------------------------- */
@@ -147,117 +104,6 @@
       save.innerHTML = icon(save.classList.contains('is-saved') ? 'bookmark-filled' : 'bookmark');
     }
   });
-
-  /* ----------------------------------------------------------------------
-     Modal
-     ---------------------------------------------------------------------- */
-  var modal = document.querySelector('[data-modal]');
-  function getItems() { return Array.prototype.slice.call(document.querySelectorAll('[data-grid] .grid__item[data-media], .grid .grid__item[data-media]')); }
-  var items = getItems();
-  var current = -1;
-  var returnUrl = null;
-
-  function postHTML(item) {
-    var d = item.dataset;
-    var media = [];
-    try { media = JSON.parse(d.media || '[]'); } catch (err) { media = []; }
-    var likes = parseInt(d.likes, 10) || 0;
-
-    var ratio = parseFloat(d.ratio) || 1;
-
-    return '<article class="post" data-post-id="' + esc(d.id || '') + '" style="--ar: ' + ratio + '">' +
-      '<div class="post__media">' + carouselHTML(media) + '</div>' +
-      '<div class="post__panel">' +
-        '<header class="post__header">' +
-          '<img class="avatar" src="' + esc(avatar) + '" alt="">' +
-          '<div><a class="post__user" href="' + esc(profileUrl) + '">' + esc(username) + '</a>' +
-          (d.location ? '<span class="post__location">' + esc(d.location) + '</span>' : '') + '</div>' +
-          '<button class="post__more icon-btn" aria-label="More options">' + icon('more') + '</button>' +
-        '</header>' +
-        '<div class="post__body">' +
-          (d.caption
-            ? '<div class="comment"><img class="avatar" src="' + esc(avatar) + '" alt="">' +
-              '<div><p class="comment__text"><a class="post__user" href="' + esc(profileUrl) + '">' + esc(username) + '</a>' + formatCaption(d.caption) + '</p>' +
-              '<div class="comment__meta"><time datetime="' + esc(d.date) + '">' + esc(formatDate(d.date)) + '</time></div></div></div>'
-            : '') +
-          '<div class="comments" data-comments></div>' +
-        '</div>' +
-        '<footer class="post__footer">' +
-          '<div class="post__actions">' +
-            (CFG.likes && d.id ? '<button class="icon-btn" data-action="like" data-post-id="' + esc(d.id) + '" aria-label="Like">' + icon('heart') + '</button>' : '') +
-            '<button class="icon-btn" data-action="comment" aria-label="Comment">' + icon('comment') + '</button>' +
-            '<button class="icon-btn" data-action="share" aria-label="Share">' + icon('share') + '</button>' +
-            '<button class="icon-btn" data-action="save" aria-label="Save">' + icon('bookmark') + '</button>' +
-          '</div>' +
-          '<p class="post__likes" data-likes-count="' + likes + '">' + formatCount(likes) + (likes === 1 ? ' like' : ' likes') + '</p>' +
-          '<a class="post__date" href="' + esc(item.getAttribute('href')) + '"><time datetime="' + esc(d.date) + '">' + esc(formatDate(d.date)) + '</time></a>' +
-          '<div data-comment-form-slot></div>' +
-        '</footer>' +
-      '</div>' +
-    '</article>';
-  }
-
-  function open(i) {
-    items = getItems();
-    if (!modal || i < 0 || i >= items.length) return;
-    current = i;
-    var item = items[i];
-    modal.querySelector('[data-modal-content]').innerHTML = postHTML(item);
-    initCarousel(modal.querySelector('.carousel'));
-    markLiked(modal);
-    loadComments(modal.querySelector('.post'));
-    modal.querySelector('.modal__step--prev').hidden = i === 0;
-    modal.querySelector('.modal__step--next').hidden = i === items.length - 1;
-
-    if (!modal.classList.contains('is-open')) {
-      returnUrl = location.href;
-      modal.classList.add('is-open');
-      document.body.classList.add('modal-open');
-      history.pushState({ modal: i }, '', item.getAttribute('href'));
-    } else {
-      history.replaceState({ modal: i }, '', item.getAttribute('href'));
-    }
-    modal.querySelector('.modal__close').focus();
-  }
-
-  function close(fromPopstate) {
-    if (!modal || !modal.classList.contains('is-open')) return;
-    modal.classList.remove('is-open');
-    document.body.classList.remove('modal-open');
-    modal.querySelector('[data-modal-content]').innerHTML = '';
-    if (!fromPopstate && returnUrl) history.pushState(null, '', returnUrl);
-    if (items[current]) items[current].focus();
-    current = -1;
-  }
-
-  if (modal) {
-    document.addEventListener('click', function (e) {
-      var item = e.target.closest('.grid__item[data-media]');
-      if (!item || e.metaKey || e.ctrlKey || e.shiftKey) return; // allow open-in-new-tab
-      e.preventDefault();
-      open(getItems().indexOf(item));
-    });
-
-    modal.querySelector('.modal__close').addEventListener('click', function () { close(); });
-    modal.querySelector('.modal__step--prev').addEventListener('click', function () { open(current - 1); });
-    modal.querySelector('.modal__step--next').addEventListener('click', function () { open(current + 1); });
-    modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
-
-    document.addEventListener('keydown', function (e) {
-      if (!modal.classList.contains('is-open')) return;
-      var c = modal.querySelector('.carousel');
-      if (e.key === 'Escape') close();
-      else if (e.key === 'ArrowRight') {
-        if (c && c.carousel && c.carousel.index < c.carousel.count - 1) c.carousel.go(c.carousel.index + 1);
-        else open(current + 1);
-      } else if (e.key === 'ArrowLeft') {
-        if (c && c.carousel && c.carousel.index > 0) c.carousel.go(c.carousel.index - 1);
-        else open(current - 1);
-      }
-    });
-
-    window.addEventListener('popstate', function () { close(true); });
-  }
 
   /* ----------------------------------------------------------------------
      Load more
@@ -471,21 +317,6 @@
   /* ----------------------------------------------------------------------
      Comments (WordPress comments)
      ---------------------------------------------------------------------- */
-  function loadComments(post) {
-    if (!post || !post.dataset.postId) return;
-    var list = post.querySelector('[data-comments]'), slot = post.querySelector('[data-comment-form-slot]');
-    fetch(CFG.ajax + '?action=iar_comments&post_id=' + encodeURIComponent(post.dataset.postId), { credentials: 'same-origin' })
-      .then(function (r) { return r.json(); })
-      .then(function (res) {
-        if (!res.success) return;
-        if (list) list.innerHTML = res.data.comments;
-        if (slot) slot.innerHTML = res.data.form;
-        showCommentingAs(post);
-        setLikes(post, res.data.likes);
-      })
-      .catch(function () {});
-  }
-
   document.addEventListener('input', function (e) {
     var input = e.target.closest('.comment-form__input');
     if (!input) return;

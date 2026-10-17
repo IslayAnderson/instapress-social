@@ -353,21 +353,6 @@ function iar_comment_form_html( $post_id ) {
  * Comments: endpoints
  * ---------------------------------------------------------------------- */
 
-/** Comments + form + current like total for one post (used by the modal). */
-function iar_ajax_comments() {
-	$post_id = absint( $_GET['post_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification
-	if ( IAR_POST_TYPE !== get_post_type( $post_id ) || 'publish' !== get_post_status( $post_id ) ) {
-		wp_send_json_error( null, 404 );
-	}
-	wp_send_json_success( array(
-		'comments' => iar_comments_html( $post_id ),
-		'form'     => iar_comment_form_html( $post_id ),
-		'likes'    => iar_like_total( $post_id ),
-	) );
-}
-add_action( 'wp_ajax_iar_comments', 'iar_ajax_comments' );
-add_action( 'wp_ajax_nopriv_iar_comments', 'iar_ajax_comments' );
-
 /** Post a comment through WordPress's own comment handling. */
 function iar_ajax_post_comment() {
 	$post_id = absint( $_POST['comment_post_ID'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification

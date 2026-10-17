@@ -1,6 +1,6 @@
 <?php
 /**
- * One tile in the profile grid. Carries the post's data for the modal.
+ * One tile in the profile grid; links to the post's own page.
  * Expects to run inside The Loop.
  */
 
@@ -17,24 +17,8 @@ $thumb    = $first['thumb'] ?: ( 'image' === $first['type'] ? $first['src'] : ''
 $likes    = iar_like_total( get_the_ID() );
 $comments = iar_comment_total( get_the_ID() );
 $caption  = iar_get_caption();
-
-$modal_media = array_map( function ( $m ) {
-	return array_filter( array(
-		'type'   => $m['type'],
-		'src'    => $m['src'],
-		'poster' => $m['poster'] ?? '',
-	) );
-}, $media );
 ?>
-<a class="grid__item" href="<?php the_permalink(); ?>"
-	data-media="<?php echo esc_attr( wp_json_encode( $modal_media ) ); ?>"
-	data-caption="<?php echo esc_attr( $caption ); ?>"
-	data-date="<?php echo esc_attr( get_post_time( 'c', true ) ); ?>"
-	data-id="<?php the_ID(); ?>"
-	data-likes="<?php echo esc_attr( $likes ); ?>"
-	data-comments="<?php echo esc_attr( $comments ); ?>"
-	data-location="<?php echo esc_attr( iar_field( 'location' ) ); ?>"
-	data-ratio="<?php echo esc_attr( iar_aspect_ratio() ); ?>">
+<a class="grid__item" href="<?php the_permalink(); ?>">
 	<?php if ( $thumb ) : ?>
 		<img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( wp_html_excerpt( $caption, 100, '…' ) ); ?>" loading="lazy">
 	<?php else : ?>

@@ -15,7 +15,7 @@ import/                      your posts.json + downloaded media (git-ignored)
 
 - **Post type** `instapress-social` with ACF fields (`ig_shortcode`, `ig_caption`, `ig_media`, `ig_media_type`, `ig_aspect_ratio`, `ig_posted_at`, `ig_likes`, `ig_comments`, `ig_location`, `ig_url` = original URL).
 - **Permalinks** `/p/DYLRvc7CC0h/`, with a **Generate shortcode** button on the edit screen.
-- **Templates**: profile grid at `/gram/` (Posts / Reels tabs, modal, load more, `?hashtag=` filter), single post at `/p/<shortcode>/`, home feed at `/gram/home/`. Override any template from your theme in `instapress-social/`.
+- **Templates**: profile grid at `/gram/` (Posts / Reels tabs, load more, `?hashtag=` filter), single post at `/p/<shortcode>/`, home feed at `/gram/home/`. Override any template from your theme in `instapress-social/`.
 - **Aspect ratios** per post (Auto, 1:1, 4:5, 3:4, 1.91:1, 9:16, Original) and grid tile shape.
 - **Following**: the **Follow** button copies the profile's feed link (`/feed/insta/`). Paste it into *instapress-social → Following* on your own site; their posts show in your home feed, refreshed hourly.
 - **Likes & comments** on WordPress's own comment system: comment panel with replies (Discussion settings, moderation and Akismet apply), likes for visitors without accounts, double-tap to like.

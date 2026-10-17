@@ -77,7 +77,7 @@ add_action( 'admin_init', function () {
 				'rc3_threshold'  => max( 0.1, min( 1.0, round( (float) ( $in['rc3_threshold'] ?? 0.5 ), 1 ) ) ),
 				'ts_comments'    => empty( $in['ts_comments'] ) ? 0 : 1,
 				'ts_likes'       => empty( $in['ts_likes'] ) ? 0 : 1,
-				'story_hours'    => max( 1, min( 168, absint( $in['story_hours'] ?? 24 ) ) ),
+				'story_hours'    => max( 1, min( 336, absint( $in['story_hours'] ?? 24 ) ) ),
 				'story_after'    => 'delete' === ( $in['story_after'] ?? '' ) ? 'delete' : 'archive',
 			);
 		},
@@ -189,7 +189,7 @@ function iar_render_settings() {
 						printf(
 							/* translators: %s: number input */
 							esc_html__( 'Stories disappear after %s hours, then are', 'instapress-social' ),
-							'<input type="number" id="iar-story-hours" class="small-text" min="1" max="168" name="' . esc_attr( $name ) . '[story_hours]" value="' . esc_attr( $s['story_hours'] ) . '">'
+							'<input type="number" id="iar-story-hours" class="small-text" min="1" max="336" name="' . esc_attr( $name ) . '[story_hours]" value="' . esc_attr( $s['story_hours'] ) . '">'
 						);
 						?>
 						<select name="<?php echo esc_attr( $name ); ?>[story_after]">

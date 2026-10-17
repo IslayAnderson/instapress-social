@@ -152,7 +152,7 @@ button.avatar-ring { cursor: pointer; }
 .load-more { display: flex; justify-content: center; padding: 0 0 40px; }
 
 /* --------------------------------------------------------------------------
-   Post (used both in the modal and on the single post page)
+   Post (single post page)
    -------------------------------------------------------------------------- */
 .post {
   --panel-w: 405px;
@@ -214,19 +214,6 @@ button.avatar-ring { cursor: pointer; }
 .carousel__dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.4); }
 .carousel__dot.is-active { background: #fff; }
 
-/* Modal */
-.modal { position: fixed; inset: 0; z-index: 100; display: none; container-type: inline-size; align-items: center; justify-content: center; background: var(--backdrop); padding: 40px 64px; }
-.modal.is-open { display: flex; }
-.modal__close { position: fixed; top: 16px; right: 16px; color: #fff; }
-.modal__close .icon { width: 28px; height: 28px; }
-.modal__step { position: fixed; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.9); color: #000; display: flex; align-items: center; justify-content: center; }
-.modal__step .icon { width: 16px; height: 16px; }
-.modal__step--prev { left: 16px; }
-.modal__step--next { right: 16px; }
-.modal__step[hidden] { display: none; }
-.modal .post { border: 0; border-radius: 4px; overflow: hidden; }
-body.modal-open { overflow: hidden; }
-
 /* Single page */
 .single { padding-top: 30px; container-type: inline-size; }
 .single .post { --frame-h: calc(100vh - 160px); margin: 0 auto; }
@@ -284,11 +271,7 @@ body.modal-open { overflow: hidden; }
   .grid { gap: 2px; }
   .grid__overlay { display: none; }
 
-  .modal { padding: 0; background: var(--bg); align-items: stretch; }
-  .modal__close { color: var(--text); z-index: 2; }
-  .modal__step { display: none; }
   .post { flex-direction: column; width: 100%; border: 0; }
-  .modal .post { overflow-y: auto; border-radius: 0; }
   .post__media { width: 100%; min-height: 0; flex: none; }
   .post__panel { contain: none; }
   /* Flatten the panel so header sits above the media, actions above the caption */
@@ -310,11 +293,7 @@ body.instapress-social { margin: 0; background: var(--bg); color: var(--text); }
 .instapress-social h1, .instapress-social h2, .instapress-social p { font-family: var(--font); }
 
 /* Admin bar offsets */
-.admin-bar .modal { top: 32px; }
-.admin-bar .modal__close { top: 48px; }
 @media (max-width: 782px) {
-  .admin-bar .modal { top: 46px; }
-  .admin-bar .modal__close { top: 62px; }
   .admin-bar .topbar { top: 46px; }
 }
 @media screen and (max-width: 600px) {
