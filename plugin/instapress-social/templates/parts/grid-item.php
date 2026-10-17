@@ -17,12 +17,19 @@ $thumb    = $first['thumb'] ?: ( 'image' === $first['type'] ? $first['src'] : ''
 $likes    = iar_like_total( get_the_ID() );
 $comments = iar_comment_total( get_the_ID() );
 $caption  = iar_get_caption();
+
+// The first rows are on screen straight away: load them now (the very first
+// with high priority) and leave the rest to load as they scroll in.
+// $args['index'] is the tile's position on the page, when the caller knows it's at the top.
+$index = isset( $args['index'] ) ? (int) $args['index'] : 99;
+$eager = $index < 6;
 ?>
 <a class="grid__item" href="<?php the_permalink(); ?>">
 	<?php if ( $thumb ) : ?>
-		<img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( wp_html_excerpt( $caption, 100, '…' ) ); ?>" loading="lazy">
+		<img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( wp_html_excerpt( $caption, 100, '…' ) ); ?>" <?php echo $eager ? ( 0 === $index ? 'fetchpriority="high"' : 'loading="eager"' ) : 'loading="lazy"'; ?> decoding="async">
 	<?php else : ?>
-		<video class="grid__video" src="<?php echo esc_url( $first['src'] ); ?>#t=0.5" muted playsinline preload="metadata" tabindex="-1" aria-label="<?php echo esc_attr( wp_html_excerpt( $caption, 100, '…' ) ); ?>"></video>
+		<?php // No poster yet: show a frame of the video, fetched only once the tile scrolls into view (assets/js/app.js). ?>
+		<video class="grid__video" data-src="<?php echo esc_url( $first['src'] ); ?>#t=0.5" muted playsinline preload="none" tabindex="-1" aria-label="<?php echo esc_attr( wp_html_excerpt( $caption, 100, '…' ) ); ?>"></video>
 	<?php endif; ?>
 	<?php if ( count( $media ) > 1 ) : ?>
 		<span class="grid__badge" aria-label="<?php esc_attr_e( 'Carousel', 'instapress-social' ); ?>"><?php echo iar_icon( 'carousel' ); // phpcs:ignore ?></span>

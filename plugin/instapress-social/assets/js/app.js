@@ -106,6 +106,31 @@
   });
 
   /* ----------------------------------------------------------------------
+     Grid videos without a poster: only fetch a frame once the tile is near
+     the screen, so they don't hold up the images above them.
+     ---------------------------------------------------------------------- */
+  var videoObserver = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      showGridVideo(entry.target);
+      videoObserver.unobserve(entry.target);
+    });
+  }, { rootMargin: '200px 0px' }) : null;
+
+  function showGridVideo(v) {
+    v.preload = 'metadata';
+    v.src = v.dataset.src;
+    v.removeAttribute('data-src');
+  }
+
+  function watchGridVideos(root) {
+    root.querySelectorAll('video.grid__video[data-src]').forEach(function (v) {
+      if (videoObserver) videoObserver.observe(v); else showGridVideo(v);
+    });
+  }
+  watchGridVideos(document);
+
+  /* ----------------------------------------------------------------------
      Load more
      ---------------------------------------------------------------------- */
   document.addEventListener('click', function (e) {
@@ -123,6 +148,7 @@
         doc.querySelectorAll(btn.dataset.items || '[data-grid] .grid__item').forEach(function (el) {
           var node = document.importNode(el, true);
           target.appendChild(node);
+          watchGridVideos(node);
           node.querySelectorAll('.carousel').forEach(initCarousel);
         });
         var next = doc.querySelector('[data-load-more]');

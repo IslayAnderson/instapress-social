@@ -26,13 +26,61 @@ function iar_profile_url() {
  * Featured Image") can't make it look like a video has a poster.
  */
 function iar_own_thumbnail_id( $post_id ) {
-	global $wpdb;
-	$id = (int) $wpdb->get_var( $wpdb->prepare(
-		"SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = '_thumbnail_id' LIMIT 1",
-		$post_id
-	) );
+	// The raw meta cache (filled by iar_prime_media) isn't filtered either, and saves a query per item.
+	$meta = wp_cache_get( $post_id, 'post_meta' );
+	if ( is_array( $meta ) ) {
+		$id = (int) ( $meta['_thumbnail_id'][0] ?? 0 );
+	} else {
+		global $wpdb;
+		$id = (int) $wpdb->get_var( $wpdb->prepare(
+			"SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = '_thumbnail_id' LIMIT 1",
+			$post_id
+		) );
+	}
 	return $id && wp_attachment_is_image( $id ) ? $id : 0;
 }
+
+/**
+ * Load every attachment a list of posts will show (gallery items, their
+ * posters, featured images) in a few queries instead of several per item.
+ */
+function iar_prime_media( $posts ) {
+	$post_ids = array();
+	foreach ( (array) $posts as $p ) {
+		$p = get_post( $p );
+		if ( $p && IAR_POST_TYPE === $p->post_type ) {
+			$post_ids[] = $p->ID;
+		}
+	}
+	if ( ! $post_ids ) {
+		return;
+	}
+	update_meta_cache( 'post', $post_ids );
+
+	$ids = array();
+	foreach ( $post_ids as $id ) {
+		$ids   = array_merge( $ids, array_map( 'absint', (array) get_post_meta( $id, IAR_FIELDS['media'], true ) ) );
+		$meta  = wp_cache_get( $id, 'post_meta' );
+		$ids[] = (int) ( $meta['_thumbnail_id'][0] ?? 0 );
+	}
+	$ids = array_values( array_unique( array_filter( $ids ) ) );
+	_prime_post_caches( $ids, false, true );
+
+	// Then the videos' posters.
+	$posters = array();
+	foreach ( $ids as $id ) {
+		$meta      = wp_cache_get( $id, 'post_meta' );
+		$posters[] = (int) ( is_array( $meta ) ? ( $meta['_thumbnail_id'][0] ?? 0 ) : 0 );
+	}
+	_prime_post_caches( array_values( array_unique( array_filter( $posters ) ) ), false, true );
+}
+
+add_filter( 'the_posts', function ( $posts, $query ) {
+	if ( count( $posts ) > 1 && in_array( $query->get( 'fields' ), array( '', 'all' ), true ) ) {
+		iar_prime_media( $posts );
+	}
+	return $posts;
+}, 10, 2 );
 
 /**
  * Poster image for a video: the video's own thumbnail (set by WordPress or by

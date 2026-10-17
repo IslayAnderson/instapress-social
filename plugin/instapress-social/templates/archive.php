@@ -96,7 +96,7 @@ iar_template_part( 'header' );
 					<?php
 					while ( have_posts() ) :
 						the_post();
-						iar_template_part( 'grid-item' );
+						iar_template_part( 'grid-item', is_paged() ? array() : array( 'index' => $GLOBALS['wp_query']->current_post ) );
 					endwhile;
 					?>
 				</div>
