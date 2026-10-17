@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.13.0
+Stable tag: 1.14.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -43,7 +43,14 @@ Copy any file from the plugin's templates/ folder into your theme at instapress-
 
 Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
 
+== Privacy ==
+
+When the plugin is set up (activated, or first run after updating), it sends one "plugin_setup" event to the plugin author's Google Analytics, so they know roughly how many sites use it. It contains the site's domain, the plugin and WordPress versions and the environment type (production, staging, local) — nothing about your visitors, posts or users. To turn it off, add `define( 'IAR_DISABLE_SETUP_EVENT', true );` to wp-config.php, or return false from the `iar_send_setup_event` filter.
+
 == Changelog ==
+
+= 1.14.0 =
+* When the plugin is set up (activated, or first run after this update) it sends one "plugin_setup" event — the site's domain, plugin and WordPress versions and environment type — to the plugin author's Google Analytics, to count installs. See Privacy for how to turn it off.
 
 = 1.13.0 =
 * Removed the pop-up post viewer: tapping a post in the profile grid now opens the post's own page. Likes, comments and the carousel work as before there.
