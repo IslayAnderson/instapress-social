@@ -30,11 +30,7 @@ function iar_import_cleanup( $job ) {
 		$base = realpath( iar_import_base_dir() );
 		$dir  = realpath( $job['dir'] );
 		if ( $base && $dir && 0 === strpos( $dir, $base . DIRECTORY_SEPARATOR ) ) {
-			$it = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST );
-			foreach ( $it as $f ) {
-				$f->isDir() ? rmdir( $f->getPathname() ) : unlink( $f->getPathname() );
-			}
-			rmdir( $dir );
+			iar_fs()->rmdir( $dir, true );
 		}
 	}
 	delete_option( IAR_JOB_OPTION );
@@ -84,14 +80,14 @@ add_action( 'admin_post_iar_import_upload', function () {
 	$base = iar_import_base_dir();
 	wp_mkdir_p( $base );
 	if ( ! is_file( $base . '/index.php' ) ) {
-		file_put_contents( $base . '/index.php', "<?php\n// Silence is golden.\n" );
-		file_put_contents( $base . '/.htaccess', "Require all denied\nDeny from all\n" );
+		iar_fs()->put_contents( $base . '/index.php', "<?php\n// Silence is golden.\n" );
+		iar_fs()->put_contents( $base . '/.htaccess', "Require all denied\nDeny from all\n" );
 	}
 	$dir = $base . '/' . wp_generate_password( 16, false );
 	wp_mkdir_p( $dir );
 
 	$json_path = $dir . '/posts.json';
-	if ( ! move_uploaded_file( $json['tmp_name'], $json_path ) ) {
+	if ( ! is_uploaded_file( $json['tmp_name'] ) || ! iar_fs()->move( $json['tmp_name'], $json_path, true ) ) {
 		$fail( __( 'Couldn\'t save the uploaded posts.json.', 'instapress-social' ), $dir );
 	}
 	$posts = IAR_Importer::load_json( $json_path );
@@ -291,15 +287,15 @@ function iar_render_import_job( $job ) {
 	$resume  = $job['pos'] > 0;
 	?>
 	<div class="card" style="max-width:760px;padding:16px 20px;">
-		<h3 style="margin-top:0;"><?php echo esc_html( sprintf( __( 'Ready to import %s', 'instapress-social' ), $job['name'] ) ); ?></h3>
+		<h3 style="margin-top:0;"><?php echo esc_html( sprintf( /* translators: %s: name of the uploaded file or folder */ __( 'Ready to import %s', 'instapress-social' ), $job['name'] ) ); ?></h3>
 		<ul style="list-style:disc;margin-left:20px;">
-			<li><?php echo esc_html( sprintf( _n( '%d post', '%d posts', count( $plan ), 'instapress-social' ), count( $plan ) ) ); ?> — <?php echo esc_html( sprintf( __( '%1$d new, %2$d already here (will be updated)', 'instapress-social' ), $creates, count( $plan ) - $creates ) ); ?></li>
-			<li><?php echo esc_html( sprintf( _n( '%d photo/video matched', '%d photos/videos matched', $files, 'instapress-social' ), $files ) ); ?><?php echo $data['orphans'] ? esc_html( sprintf( __( ' (%d other files in the folder aren\'t in any post)', 'instapress-social' ), count( $data['orphans'] ) ) ) : ''; ?></li>
+			<li><?php echo esc_html( sprintf( /* translators: %d: number of posts */ _n( '%d post', '%d posts', count( $plan ), 'instapress-social' ), count( $plan ) ) ); ?> — <?php echo esc_html( sprintf( /* translators: %1$d: posts to create, %2$d: posts to update */ __( '%1$d new, %2$d already here (will be updated)', 'instapress-social' ), $creates, count( $plan ) - $creates ) ); ?></li>
+			<li><?php echo esc_html( sprintf( /* translators: %d: number of files */ _n( '%d photo/video matched', '%d photos/videos matched', $files, 'instapress-social' ), $files ) ); ?><?php echo $data['orphans'] ? esc_html( sprintf( /* translators: %d: number of files */ __( ' (%d other files in the folder aren\'t in any post)', 'instapress-social' ), count( $data['orphans'] ) ) ) : ''; ?></li>
 			<?php if ( $reused ) : ?>
-				<li><?php echo esc_html( sprintf( _n( '%d file is already in your media library and will be reused', '%d files are already in your media library and will be reused', $reused, 'instapress-social' ), $reused ) ); ?></li>
+				<li><?php echo esc_html( sprintf( /* translators: %d: number of files */ _n( '%d file is already in your media library and will be reused', '%d files are already in your media library and will be reused', $reused, 'instapress-social' ), $reused ) ); ?></li>
 			<?php endif; ?>
 			<?php if ( $missing ) : ?>
-				<li style="color:#b32d2e;"><?php echo esc_html( sprintf( _n( '%d file listed in posts.json is missing', '%d files listed in posts.json are missing', count( $missing ), 'instapress-social' ), count( $missing ) ) ); ?> — <?php esc_html_e( 'those slides will be skipped.', 'instapress-social' ); ?></li>
+				<li style="color:#b32d2e;"><?php echo esc_html( sprintf( /* translators: %d: number of files */ _n( '%d file listed in posts.json is missing', '%d files listed in posts.json are missing', count( $missing ), 'instapress-social' ), count( $missing ) ) ); ?> — <?php esc_html_e( 'those slides will be skipped.', 'instapress-social' ); ?></li>
 			<?php endif; ?>
 		</ul>
 		<?php if ( $missing ) : ?>
@@ -308,7 +304,7 @@ function iar_render_import_job( $job ) {
 
 		<div id="iar-progress" style="margin:16px 0 8px;<?php echo $resume ? '' : 'display:none;'; ?>">
 			<div style="height:10px;background:#f0f0f1;border-radius:5px;overflow:hidden;"><div id="iar-bar" style="height:100%;width:<?php echo esc_attr( $plan ? round( 100 * $job['pos'] / count( $plan ) ) : 0 ); ?>%;background:#2271b1;transition:width .3s;"></div></div>
-			<p id="iar-status" style="margin:6px 0 0;"><?php echo $resume ? esc_html( sprintf( __( 'Paused at %1$d of %2$d.', 'instapress-social' ), $job['pos'], count( $plan ) ) ) : ''; ?></p>
+			<p id="iar-status" style="margin:6px 0 0;"><?php echo $resume ? esc_html( sprintf( /* translators: %1$d: posts imported so far, %2$d: total posts */ __( 'Paused at %1$d of %2$d.', 'instapress-social' ), $job['pos'], count( $plan ) ) ) : ''; ?></p>
 		</div>
 
 		<p>

@@ -143,7 +143,8 @@ add_action( 'wp_ajax_iar_compose_upload', function () {
 add_action( 'wp_ajax_iar_compose_publish', function () {
 	iar_compose_guard();
 	// phpcs:disable WordPress.Security.NonceVerification -- checked in the guard
-	$kind  = in_array( $_POST['kind'] ?? '', array( 'story', 'text' ), true ) ? $_POST['kind'] : 'post';
+	$kind  = sanitize_key( wp_unslash( $_POST['kind'] ?? '' ) );
+	$kind  = in_array( $kind, array( 'story', 'text' ), true ) ? $kind : 'post';
 	$media = array_values( array_unique( array_filter( array_map( 'absint', (array) ( $_POST['media'] ?? array() ) ) ) ) );
 	// phpcs:enable
 	if ( 'text' === $kind ) {
@@ -235,7 +236,7 @@ function iar_compose_create_post( $media ) {
 /** A text post: words and their look, no media (includes/text-posts.php). */
 function iar_compose_create_text_post() {
 	// phpcs:disable WordPress.Security.NonceVerification -- checked in the guard
-	$html  = iar_text_sanitize( wp_unslash( $_POST['text_html'] ?? '' ) );
+	$html  = iar_text_sanitize( wp_unslash( $_POST['text_html'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- iar_text_sanitize(): wp_kses with a fixed allowlist
 	$style = array();
 	foreach ( array( 'scale', 'font', 'align', 'color', 'bg', 'bg_color' ) as $k ) {
 		$style[ $k ] = sanitize_text_field( wp_unslash( $_POST[ 'text_' . $k ] ?? '' ) );

@@ -70,7 +70,7 @@ $long    = mb_strlen( $caption ) > 125 || substr_count( $caption, "\n" ) > 1;
 			<button class="icon-btn" data-action="share" data-url="<?php echo esc_url( $item['url'] ); ?>" aria-label="<?php esc_attr_e( 'Share', 'instapress-social' ); ?>"><?php echo iar_icon( 'share' ); // phpcs:ignore ?></button>
 			<button class="icon-btn" data-action="save" aria-label="<?php esc_attr_e( 'Save', 'instapress-social' ); ?>"><?php echo iar_icon( 'bookmark' ); // phpcs:ignore ?></button>
 		</div>
-		<p class="post__likes" data-likes-count="<?php echo esc_attr( $likes ); ?>"><?php echo esc_html( sprintf( _n( '%s like', '%s likes', $likes, 'instapress-social' ), iar_count( $likes ) ) ); ?></p>
+		<p class="post__likes" data-likes-count="<?php echo esc_attr( $likes ); ?>"><?php echo esc_html( sprintf( /* translators: %s: number of likes */ _n( '%s like', '%s likes', $likes, 'instapress-social' ), iar_count( $likes ) ) ); ?></p>
 		<?php if ( '' !== trim( $caption ) ) : ?>
 			<p class="card__caption<?php echo $long ? ' is-clamped' : ''; ?>"><a class="post__user" href="<?php echo esc_url( $profile['profile'] ); ?>"><?php echo esc_html( $profile['username'] ); ?></a> <?php echo iar_format_caption( $caption ); // phpcs:ignore -- escaped inside ?></p>
 			<?php if ( $long ) : ?>
@@ -78,7 +78,7 @@ $long    = mb_strlen( $caption ) > 125 || substr_count( $caption, "\n" ) > 1;
 			<?php endif; ?>
 		<?php endif; ?>
 		<?php if ( ! empty( $item['comments'] ) ) : ?>
-			<a class="card__comments" href="<?php echo esc_url( $item['url'] ); ?>"><?php echo esc_html( sprintf( _n( 'View %s comment', 'View all %s comments', (int) $item['comments'], 'instapress-social' ), iar_count( $item['comments'] ) ) ); ?></a>
+			<a class="card__comments" href="<?php echo esc_url( $item['url'] ); ?>"><?php echo esc_html( sprintf( /* translators: %s: number of comments */ _n( 'View %s comment', 'View all %s comments', (int) $item['comments'], 'instapress-social' ), iar_count( $item['comments'] ) ) ); ?></a>
 		<?php endif; ?>
 	</div>
 </article>

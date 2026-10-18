@@ -173,7 +173,7 @@ function iar_captcha_verify( $action ) {
 		return true;
 	}
 	// phpcs:disable WordPress.Security.NonceVerification
-	$token = (string) wp_unslash( $_POST['captcha_token'] ?? $_POST['cf-turnstile-response'] ?? $_POST['g-recaptcha-response'] ?? '' );
+	$token = sanitize_text_field( wp_unslash( $_POST['captcha_token'] ?? ( $_POST['cf-turnstile-response'] ?? ( $_POST['g-recaptcha-response'] ?? '' ) ) ) );
 	// phpcs:enable
 	if ( '' === $token || strlen( $token ) > 4096 ) {
 		return false;

@@ -99,6 +99,6 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 		'epoch'   => IAR_EPOCH_MS,
 		'base'    => home_url( '/' . iar_post_slug() . '/' ),
 		'field'   => IAR_FIELDS['shortcode'],
-		'confirm' => __( "This post already has the shortcode \"%s\".\nReplace it (and the slug) with a new one?", 'instapress-social' ),
+		'confirm' => /* translators: %s: the post's current shortcode */ __( "This post already has the shortcode \"%s\".\nReplace it (and the slug) with a new one?", 'instapress-social' ),
 	) );
 } );

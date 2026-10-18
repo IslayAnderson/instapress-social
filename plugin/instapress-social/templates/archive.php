@@ -47,7 +47,7 @@ iar_template_part( 'header' );
 								<a class="btn" href="<?php echo esc_url( iar_compose_url() ); ?>"><?php esc_html_e( 'New post', 'instapress-social' ); ?></a>
 							<?php endif; ?>
 							<?php if ( iar_download_enabled() ) : ?>
-								<a class="btn" href="<?php echo esc_url( iar_download_url() ); ?>" download title="<?php echo esc_attr( sprintf( __( 'Download the instapress-social WordPress plugin (version %s) to follow people from your own site', 'instapress-social' ), IAR_VERSION ) ); ?>"><?php esc_html_e( 'Get instapress-social', 'instapress-social' ); ?></a>
+								<a class="btn" href="<?php echo esc_url( iar_download_url() ); ?>" download title="<?php echo esc_attr( sprintf( /* translators: %s: plugin version number */ __( 'Download the instapress-social WordPress plugin (version %s) to follow people from your own site', 'instapress-social' ), IAR_VERSION ) ); ?>"><?php esc_html_e( 'Get instapress-social', 'instapress-social' ); ?></a>
 							<?php endif; ?>
 						</div>
 					</div>
@@ -88,7 +88,7 @@ iar_template_part( 'header' );
 			<?php if ( '' !== $hashtag ) : ?>
 				<div class="hashtag-bar">
 					<h2>#<?php echo esc_html( $hashtag ); ?></h2>
-					<span><?php echo esc_html( sprintf( _n( '%s post', '%s posts', (int) $GLOBALS['wp_query']->found_posts, 'instapress-social' ), iar_count( $GLOBALS['wp_query']->found_posts ) ) ); ?></span>
+					<span><?php echo esc_html( sprintf( /* translators: %s: number of posts */ _n( '%s post', '%s posts', (int) $GLOBALS['wp_query']->found_posts, 'instapress-social' ), iar_count( $GLOBALS['wp_query']->found_posts ) ) ); ?></span>
 					<a href="<?php echo esc_url( $profile_url ); ?>"><?php esc_html_e( 'Show all', 'instapress-social' ); ?></a>
 				</div>
 			<?php endif; ?>
@@ -115,7 +115,7 @@ iar_template_part( 'header' );
 		</div>
 <div class="email-modal follow-modal" data-follow-modal hidden role="dialog" aria-modal="true" aria-labelledby="iar-follow-title">
 	<form class="email-modal__box" data-follow-form novalidate>
-		<h2 id="iar-follow-title"><?php printf( esc_html__( 'Follow @%s', 'instapress-social' ), esc_html( $iar['username'] ) ); ?></h2>
+		<h2 id="iar-follow-title"><?php printf( /* translators: %s: username */ esc_html__( 'Follow @%s', 'instapress-social' ), esc_html( $iar['username'] ) ); ?></h2>
 		<p class="email-modal__note"><?php esc_html_e( 'Enter the address of your own site with instapress-social. Its Following page opens in a new tab with this profile filled in, ready to follow.', 'instapress-social' ); ?></p>
 		<label class="email-modal__field"><?php esc_html_e( 'Your site', 'instapress-social' ); ?>
 			<input type="text" name="site" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="your-site.com" required>

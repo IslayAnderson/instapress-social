@@ -253,7 +253,7 @@ function iar_render_settings() {
 					<th scope="row"><?php esc_html_e( 'Share the plugin', 'instapress-social' ); ?></th>
 					<td>
 						<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[share_plugin]" value="1" <?php checked( $s['share_plugin'] ); ?>> <?php esc_html_e( 'Show a "Get instapress-social" button so visitors can download this plugin and follow you back', 'instapress-social' ); ?></label>
-						<p class="description"><?php printf( esc_html__( 'Downloads the version installed here (%s).', 'instapress-social' ), esc_html( IAR_VERSION ) ); ?></p>
+						<p class="description"><?php printf( /* translators: %s: plugin version number */ esc_html__( 'Downloads the version installed here (%s).', 'instapress-social' ), esc_html( IAR_VERSION ) ); ?></p>
 					</td>
 				</tr>
 				<tr>

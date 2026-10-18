@@ -166,7 +166,7 @@ add_action( 'pre_get_posts', function ( $q ) {
 } );
 
 function iar_current_hashtag() {
-	$tag = isset( $_GET['hashtag'] ) ? wp_unslash( $_GET['hashtag'] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+	$tag = isset( $_GET['hashtag'] ) ? sanitize_text_field( wp_unslash( $_GET['hashtag'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 	return preg_match( '/^[\p{L}\p{N}_]{1,100}$/u', $tag ) ? $tag : '';
 }
 

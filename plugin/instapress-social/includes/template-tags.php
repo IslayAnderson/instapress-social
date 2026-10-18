@@ -6,6 +6,29 @@
 defined( 'ABSPATH' ) || exit;
 
 /** Raw field value (works with or without ACF — ACF stores under the same meta key). */
+/**
+ * WordPress's filesystem API for the plugin's own files (import jobs, the
+ * download package, imported media dates). They're all inside uploads, which
+ * PHP can write to, so the "direct" method is used — never FTP credentials.
+ */
+function iar_fs() {
+	static $fs = null;
+	if ( null === $fs ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-base.php';
+		require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-direct.php';
+		// Normally set up by WP_Filesystem(); the class needs them for writing files.
+		if ( ! defined( 'FS_CHMOD_DIR' ) ) {
+			define( 'FS_CHMOD_DIR', ( fileperms( ABSPATH ) & 0777 | 0755 ) );
+		}
+		if ( ! defined( 'FS_CHMOD_FILE' ) ) {
+			define( 'FS_CHMOD_FILE', ( fileperms( ABSPATH . 'index.php' ) & 0777 | 0644 ) );
+		}
+		$fs = new WP_Filesystem_Direct( null );
+	}
+	return $fs;
+}
+
 function iar_field( $key, $post_id = null ) {
 	return get_post_meta( $post_id ?: get_the_ID(), IAR_FIELDS[ $key ], true );
 }

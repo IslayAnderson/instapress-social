@@ -86,7 +86,7 @@ while ( have_posts() ) :
 							<button class="icon-btn" aria-label="<?php esc_attr_e( 'Share', 'instapress-social' ); ?>" data-action="share"><?php echo iar_icon( 'share' ); // phpcs:ignore ?></button>
 							<button class="icon-btn" data-action="save" aria-label="<?php esc_attr_e( 'Save', 'instapress-social' ); ?>"><?php echo iar_icon( 'bookmark' ); // phpcs:ignore ?></button>
 						</div>
-						<p class="post__likes" data-likes-count="<?php echo esc_attr( $likes ); ?>"><?php echo esc_html( sprintf( _n( '%s like', '%s likes', $likes, 'instapress-social' ), iar_count( $likes ) ) ); ?></p>
+						<p class="post__likes" data-likes-count="<?php echo esc_attr( $likes ); ?>"><?php echo esc_html( sprintf( /* translators: %s: number of likes */ _n( '%s like', '%s likes', $likes, 'instapress-social' ), iar_count( $likes ) ) ); ?></p>
 						<a class="post__date" href="<?php the_permalink(); ?>"><time datetime="<?php echo esc_attr( $date_c ); ?>"><?php echo esc_html( $date ); ?></time></a>
 						<?php echo iar_comment_form_html( get_the_ID() ); // phpcs:ignore -- escaped inside ?>
 					</footer>

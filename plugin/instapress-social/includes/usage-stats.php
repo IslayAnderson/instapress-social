@@ -129,7 +129,7 @@ add_action( 'admin_notices', function () {
 	<?php
 } );
 add_action( 'admin_init', function () {
-	if ( 'dismiss' === ( $_GET['iar_usage_notice'] ?? '' ) && check_admin_referer( 'iar_usage_notice' ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+	if ( 'dismiss' === sanitize_key( wp_unslash( $_GET['iar_usage_notice'] ?? '' ) ) && check_admin_referer( 'iar_usage_notice' ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 		update_user_meta( get_current_user_id(), 'iar_usage_notice_dismissed', 1 );
 		wp_safe_redirect( remove_query_arg( array( 'iar_usage_notice', '_wpnonce' ) ) );
 		exit;

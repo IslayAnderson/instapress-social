@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
 
 function iar_scraper_source() {
 	$file = IAR_DIR . 'tools/imginn-scrape.js';
-	return is_readable( $file ) ? (string) file_get_contents( $file ) : '';
+	return is_readable( $file ) ? (string) iar_fs()->get_contents( $file ) : '';
 }
 
 /** javascript: URL for the bookmarklet. */

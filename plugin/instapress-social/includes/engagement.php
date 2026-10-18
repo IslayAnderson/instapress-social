@@ -174,7 +174,7 @@ function iar_liker_key() {
 	if ( is_user_logged_in() ) {
 		return 'u:' . get_current_user_id();
 	}
-	$vid = isset( $_POST['vid'] ) ? preg_replace( '/[^a-zA-Z0-9-]/', '', (string) wp_unslash( $_POST['vid'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+	$vid = isset( $_POST['vid'] ) ? preg_replace( '/[^a-zA-Z0-9-]/', '', sanitize_text_field( wp_unslash( $_POST['vid'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 	return strlen( $vid ) >= 16 ? 'v:' . wp_hash( $vid, 'nonce' ) : '';
 }
 
@@ -191,7 +191,7 @@ function iar_like_toggle() {
 	iar_captcha_require( 'like' );
 
 	// Light throttle per address: 120 toggles an hour is plenty for a person.
-	$bucket = 'iar_like_rate_' . md5( (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+	$bucket = 'iar_like_rate_' . md5( sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) ) );
 	$hits   = (int) get_transient( $bucket );
 	if ( $hits > 120 ) {
 		wp_send_json_error( __( 'Slow down a little.', 'instapress-social' ), 429 );
@@ -311,7 +311,7 @@ function iar_comments_html( $post_id ) {
 	$earlier = (int) iar_field( 'comments', $post_id );
 	$url     = (string) iar_field( 'url', $post_id );
 	if ( $earlier ) {
-		$label = sprintf( _n( '%s earlier comment on Instagram', '%s earlier comments on Instagram', $earlier, 'instapress-social' ), iar_count( $earlier ) );
+		$label = sprintf( /* translators: %s: number of comments */ _n( '%s earlier comment on Instagram', '%s earlier comments on Instagram', $earlier, 'instapress-social' ), iar_count( $earlier ) );
 		$html  = '<p class="comments__earlier">' . ( $url ? '<a href="' . esc_url( $url ) . '" rel="noopener" target="_blank">' . esc_html( $label ) . '</a>' : esc_html( $label ) ) . '</p>' . $html;
 	}
 	return $html;

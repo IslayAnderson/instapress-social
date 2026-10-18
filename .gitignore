@@ -7,3 +7,6 @@ dist/
 # Local tooling / OS junk
 .claude/
 .DS_Store
+
+# IDE settings
+.idea/

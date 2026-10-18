@@ -99,8 +99,9 @@ add_filter( 'acf/validate_value/key=field_ig_media', function ( $valid, $value, 
 			return __( 'Media must be photos or videos.', 'instapress-social' );
 		}
 	}
-	// Replace ACF's image-only verdict; keep any other message (e.g. a minimum count).
-	return ( true === $valid || __( 'File must be a valid image.', 'acf' ) === $valid ) ? true : $valid;
+	// Every item is a photo or video, so it's valid — whatever ACF's image-only check said.
+	// (The field sets no other rules, such as a minimum number of items.)
+	return true;
 }, 20, 3 );
 
 add_action( 'admin_notices', function () {

@@ -107,7 +107,7 @@ function iar_http_get( $url ) {
 	}
 	$code = wp_remote_retrieve_response_code( $res );
 	if ( 200 !== $code ) {
-		return new WP_Error( 'iar_http', sprintf( __( 'The site answered with HTTP %d.', 'instapress-social' ), $code ) );
+		return new WP_Error( 'iar_http', sprintf( /* translators: %d: HTTP status code */ __( 'The site answered with HTTP %d.', 'instapress-social' ), $code ) );
 	}
 	return wp_remote_retrieve_body( $res );
 }
@@ -338,7 +338,7 @@ add_action( 'admin_post_iar_follow', function () {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_die( esc_html__( 'Sorry, you can\'t do that.', 'instapress-social' ) );
 	}
-	$result = iar_follow( wp_unslash( $_POST['feed'] ?? '' ) );
+	$result = iar_follow( esc_url_raw( wp_unslash( $_POST['feed'] ?? '' ) ) );
 	$args   = is_wp_error( $result )
 		? array( 'iar_error' => rawurlencode( $result->get_error_message() ) )
 		: array( 'iar_followed' => rawurlencode( $result['username'] ) );
@@ -361,7 +361,7 @@ add_action( 'admin_post_iar_following_action', function () {
 		case 'refresh':
 			iar_refresh_one( $id );
 			$f    = iar_following()[ $id ] ?? null;
-			$args = ! $f ? array() : ( empty( $f['error'] ) ? array( 'iar_refreshed' => rawurlencode( $f['username'] ) ) : array( 'iar_error' => rawurlencode( sprintf( __( 'Couldn\'t refresh @%1$s: %2$s', 'instapress-social' ), $f['username'], $f['error'] ) ) ) );
+			$args = ! $f ? array() : ( empty( $f['error'] ) ? array( 'iar_refreshed' => rawurlencode( $f['username'] ) ) : array( 'iar_error' => rawurlencode( sprintf( /* translators: %1$s: username, %2$s: error message */ __( 'Couldn\'t refresh @%1$s: %2$s', 'instapress-social' ), $f['username'], $f['error'] ) ) ) );
 			break;
 		case 'refresh_all':
 			iar_refresh_all();
@@ -420,7 +420,7 @@ function iar_render_following_page() {
 			$preview = is_wp_error( $preview ) ? $preview : iar_parse_feed( $preview[1], $preview[0] );
 			?>
 			<?php if ( is_wp_error( $preview ) ) : ?>
-				<div class="notice notice-error"><p><?php echo esc_html( sprintf( __( 'Couldn\'t load that profile: %s', 'instapress-social' ), $preview->get_error_message() ) ); ?></p></div>
+				<div class="notice notice-error"><p><?php echo esc_html( sprintf( /* translators: %s: error message */ __( 'Couldn\'t load that profile: %s', 'instapress-social' ), $preview->get_error_message() ) ); ?></p></div>
 			<?php else : ?>
 				<?php
 				$who     = $preview[0];
@@ -432,9 +432,9 @@ function iar_render_following_page() {
 					<?php endif; ?>
 					<p style="margin:0;">
 						<?php if ( $already ) : ?>
-							<?php printf( esc_html__( 'You already follow @%s.', 'instapress-social' ), esc_html( $who['username'] ) ); ?>
+							<?php printf( /* translators: %s: username */ esc_html__( 'You already follow @%s.', 'instapress-social' ), esc_html( $who['username'] ) ); ?>
 						<?php else : ?>
-							<strong><?php printf( esc_html__( 'Follow @%s?', 'instapress-social' ), esc_html( $who['username'] ) ); ?></strong>
+							<strong><?php printf( /* translators: %s: username */ esc_html__( 'Follow @%s?', 'instapress-social' ), esc_html( $who['username'] ) ); ?></strong>
 							<?php echo $who['name'] ? ' ' . esc_html( $who['name'] ) . ' · ' : ' '; ?>
 							<a href="<?php echo esc_url( $who['profile'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( wp_parse_url( $who['profile'], PHP_URL_HOST ) ); ?></a><br>
 							<?php esc_html_e( 'Press Follow below to add them to your home feed.', 'instapress-social' ); ?>
@@ -480,7 +480,7 @@ function iar_render_following_page() {
 							<?php endif; ?>
 						</td>
 						<td><?php echo (int) count( iar_following_items( $id ) ); ?></td>
-						<td><?php echo $f['synced'] ? esc_html( sprintf( __( '%s ago', 'instapress-social' ), human_time_diff( $f['synced'] ) ) ) : '—'; ?></td>
+						<td><?php echo $f['synced'] ? esc_html( sprintf( /* translators: %s: time span, e.g. "5 mins" */ __( '%s ago', 'instapress-social' ), human_time_diff( $f['synced'] ) ) ) : '—'; ?></td>
 						<td style="text-align:right;white-space:nowrap;">
 							<?php foreach ( array( 'refresh' => __( 'Refresh', 'instapress-social' ), 'unfollow' => __( 'Unfollow', 'instapress-social' ) ) as $do => $label ) : ?>
 								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
@@ -488,7 +488,7 @@ function iar_render_following_page() {
 									<input type="hidden" name="action" value="iar_following_action">
 									<input type="hidden" name="id" value="<?php echo esc_attr( $id ); ?>">
 									<input type="hidden" name="do" value="<?php echo esc_attr( $do ); ?>">
-									<button class="button<?php echo 'unfollow' === $do ? ' button-link-delete' : ''; ?>" <?php echo 'unfollow' === $do ? 'onclick="return confirm(\'' . esc_js( sprintf( __( 'Unfollow @%s?', 'instapress-social' ), $f['username'] ) ) . '\')"' : ''; ?>><?php echo esc_html( $label ); ?></button>
+									<button class="button<?php echo 'unfollow' === $do ? ' button-link-delete' : ''; ?>" <?php echo 'unfollow' === $do ? 'onclick="return confirm(\'' . esc_js( sprintf( /* translators: %s: username */ __( 'Unfollow @%s?', 'instapress-social' ), $f['username'] ) ) . '\')"' : ''; ?>><?php echo esc_html( $label ); ?></button>
 								</form>
 							<?php endforeach; ?>
 						</td>

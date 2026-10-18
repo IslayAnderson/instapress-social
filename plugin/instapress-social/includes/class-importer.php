@@ -30,7 +30,7 @@ class IAR_Importer {
 		if ( ! is_file( $path ) || ! is_readable( $path ) ) {
 			return new WP_Error( 'iar_json', __( 'posts.json could not be read.', 'instapress-social' ) );
 		}
-		$data  = json_decode( (string) file_get_contents( $path ), true );
+		$data  = json_decode( (string) iar_fs()->get_contents( $path ), true );
 		$posts = isset( $data['posts'] ) ? $data['posts'] : $data;
 		if ( ! is_array( $posts ) || ( $posts && ! isset( reset( $posts )['shortcode'] ) ) ) {
 			return new WP_Error( 'iar_json', __( 'That file isn\'t a posts.json from the imginn scraper.', 'instapress-social' ) );
@@ -291,7 +291,7 @@ class IAR_Importer {
 		}
 		foreach ( array_unique( $all ) as $p ) {
 			if ( $time && is_file( $p ) ) {
-				touch( $p, $time );
+				iar_fs()->touch( $p, $time );
 			}
 		}
 	}

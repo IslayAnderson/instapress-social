@@ -111,7 +111,7 @@ iar_template_part( 'header', array( 'topbar_title' => __( 'New post', 'instapres
 							foreach ( $aligns as $align => $a ) :
 								?>
 								<button type="button" class="chip chip--icon" data-text-align="<?php echo esc_attr( $align ); ?>" title="<?php echo esc_attr( $a[0] ); ?>" aria-label="<?php echo esc_attr( $a[0] ); ?>">
-									<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><?php foreach ( $a[1] as $i => $line ) : ?><line x1="<?php echo (int) $line[0]; ?>" y1="<?php echo 5 + $i * 5; ?>" x2="<?php echo (int) $line[1]; ?>" y2="<?php echo 5 + $i * 5; ?>"/><?php endforeach; ?></svg>
+									<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><?php foreach ( $a[1] as $i => $line ) : ?><line x1="<?php echo (int) $line[0]; ?>" y1="<?php echo (int) ( 5 + $i * 5 ); ?>" x2="<?php echo (int) $line[1]; ?>" y2="<?php echo (int) ( 5 + $i * 5 ); ?>"/><?php endforeach; ?></svg>
 								</button>
 							<?php endforeach; ?>
 						</div>

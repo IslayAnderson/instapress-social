@@ -163,43 +163,40 @@ function iar_render_feed() {
 		'post_status'    => 'publish',
 	) );
 	$me = iar_own_profile();
-	$x  = function ( $s ) {
-		return esc_xml( (string) $s );
-	};
 
 	header( 'Content-Type: application/rss+xml; charset=' . get_option( 'blog_charset' ), true );
 	echo '<?xml version="1.0" encoding="' . esc_attr( get_option( 'blog_charset' ) ) . '"?>' . "\n";
 	?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:insta="<?php echo $x( IAR_NS ); ?>">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:insta="<?php echo esc_xml( (string) IAR_NS ); ?>">
 <channel>
-	<title><?php echo $x( '@' . $me['username'] . ( $me['name'] ? ' (' . $me['name'] . ')' : '' ) ); ?></title>
-	<link><?php echo $x( $me['profile'] ); ?></link>
-	<description><?php echo $x( iar_setting( 'bio' ) ); ?></description>
-	<atom:link href="<?php echo $x( $me['feed'] ); ?>" rel="self" type="application/rss+xml" />
-	<lastBuildDate><?php echo $x( gmdate( 'r', strtotime( iar_feed_last_modified() . ' UTC' ) ) ); ?></lastBuildDate>
-	<generator>instapress-social <?php echo $x( IAR_VERSION ); ?></generator>
-	<insta:username><?php echo $x( $me['username'] ); ?></insta:username>
-	<insta:name><?php echo $x( $me['name'] ); ?></insta:name>
-	<insta:avatar><?php echo $x( $me['avatar'] ); ?></insta:avatar>
-	<insta:profile><?php echo $x( $me['profile'] ); ?></insta:profile>
+	<title><?php echo esc_xml( (string) '@' . $me['username'] . ( $me['name'] ? ' (' . $me['name'] . ')' : '' ) ); ?></title>
+	<link><?php echo esc_xml( (string) $me['profile'] ); ?></link>
+	<description><?php echo esc_xml( (string) iar_setting( 'bio' ) ); ?></description>
+	<atom:link href="<?php echo esc_xml( (string) $me['feed'] ); ?>" rel="self" type="application/rss+xml" />
+	<lastBuildDate><?php echo esc_xml( (string) gmdate( 'r', strtotime( iar_feed_last_modified() . ' UTC' ) ) ); ?></lastBuildDate>
+	<generator>instapress-social <?php echo esc_xml( (string) IAR_VERSION ); ?></generator>
+	<insta:username><?php echo esc_xml( (string) $me['username'] ); ?></insta:username>
+	<insta:name><?php echo esc_xml( (string) $me['name'] ); ?></insta:name>
+	<insta:avatar><?php echo esc_xml( (string) $me['avatar'] ); ?></insta:avatar>
+	<insta:profile><?php echo esc_xml( (string) $me['profile'] ); ?></insta:profile>
 	<insta:count><?php echo (int) wp_count_posts( IAR_POST_TYPE )->publish; ?></insta:count>
 <?php iar_feed_story_elements(); ?>
 <?php foreach ( $posts as $post ) : $item = iar_post_to_item( $post ); ?>
 	<item>
-		<title><?php echo $x( wp_html_excerpt( $item['caption'] ?: $item['text'], 100, '…' ) ); ?></title>
-		<link><?php echo $x( $item['url'] ); ?></link>
-		<guid isPermaLink="true"><?php echo $x( $item['url'] ); ?></guid>
-		<pubDate><?php echo $x( get_post_time( 'r', true, $post ) ); ?></pubDate>
-		<description><?php echo $x( trim( $item['text'] . ( $item['text'] && $item['caption'] ? "\n\n" : '' ) . $item['caption'] ) ); ?></description>
-		<insta:type><?php echo $x( $item['type'] ); ?></insta:type>
-		<insta:ratio><?php echo $x( $item['ratio'] ); ?></insta:ratio>
+		<title><?php echo esc_xml( (string) wp_html_excerpt( $item['caption'] ?: $item['text'], 100, '…' ) ); ?></title>
+		<link><?php echo esc_xml( (string) $item['url'] ); ?></link>
+		<guid isPermaLink="true"><?php echo esc_xml( (string) $item['url'] ); ?></guid>
+		<pubDate><?php echo esc_xml( (string) get_post_time( 'r', true, $post ) ); ?></pubDate>
+		<description><?php echo esc_xml( (string) trim( $item['text'] . ( $item['text'] && $item['caption'] ? "\n\n" : '' ) . $item['caption'] ) ); ?></description>
+		<insta:type><?php echo esc_xml( (string) $item['type'] ); ?></insta:type>
+		<insta:ratio><?php echo esc_xml( (string) $item['ratio'] ); ?></insta:ratio>
 		<insta:likes><?php echo (int) $item['likes']; ?></insta:likes>
 		<insta:comments><?php echo (int) $item['comments']; ?></insta:comments>
 <?php if ( $item['location'] ) : ?>
-		<insta:location><?php echo $x( $item['location'] ); ?></insta:location>
+		<insta:location><?php echo esc_xml( (string) $item['location'] ); ?></insta:location>
 <?php endif; ?>
 <?php foreach ( $item['media'] as $m ) : ?>
-		<media:content url="<?php echo $x( $m['src'] ); ?>" medium="<?php echo 'video' === $m['type'] ? 'video' : 'image'; ?>"<?php echo 'text' === $m['type'] ? ' type="image/svg+xml"' : ''; ?><?php echo ! empty( $m['width'] ) ? ' width="' . (int) $m['width'] . '" height="' . (int) $m['height'] . '"' : ''; ?><?php echo empty( $m['poster'] ) ? ' />' : '><media:thumbnail url="' . $x( $m['poster'] ) . '" /></media:content>'; ?>
+		<media:content url="<?php echo esc_xml( (string) $m['src'] ); ?>" medium="<?php echo 'video' === $m['type'] ? 'video' : 'image'; ?>"<?php echo 'text' === $m['type'] ? ' type="image/svg+xml"' : ''; ?><?php echo ! empty( $m['width'] ) ? ' width="' . (int) $m['width'] . '" height="' . (int) $m['height'] . '"' : ''; ?><?php echo empty( $m['poster'] ) ? ' />' : '><media:thumbnail url="' . esc_xml( (string) $m['poster'] ) . '" /></media:content>'; ?>
 
 <?php endforeach; ?>
 	</item>

@@ -24,13 +24,13 @@ function iar_package_filename() {
 	return 'instapress-social-' . IAR_VERSION . '.zip';
 }
 
-/** Files to package: everything in the plugin folder except OS junk. */
+/** Files to package: everything in the plugin folder except hidden files/folders (.git, .idea, .DS_Store…) and OS junk. */
 function iar_package_files() {
 	$files = array();
 	$it    = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( IAR_DIR, FilesystemIterator::SKIP_DOTS ) );
 	foreach ( $it as $file ) {
-		$name = $file->getFilename();
-		if ( $file->isFile() && ! in_array( $name, array( '.DS_Store', 'Thumbs.db' ), true ) && 0 !== strpos( $name, '._' ) ) {
+		$rel = ltrim( str_replace( '\\', '/', substr( $file->getPathname(), strlen( IAR_DIR ) ) ), '/' );
+		if ( $file->isFile() && ! preg_match( '#(^|/)\.#', $rel ) && 'Thumbs.db' !== $file->getFilename() ) {
 			$files[] = $file->getPathname();
 		}
 	}
@@ -61,7 +61,7 @@ function iar_build_package() {
 		return new WP_Error( 'iar_zip', __( 'Couldn\'t create the uploads folder for the package.', 'instapress-social' ) );
 	}
 	if ( ! is_file( $dir . '/index.php' ) ) {
-		file_put_contents( $dir . '/index.php', "<?php\n// Silence is golden.\n" );
+		iar_fs()->put_contents( $dir . '/index.php', "<?php\n// Silence is golden.\n" );
 	}
 
 	$tmp = $path . '.tmp';
@@ -75,7 +75,7 @@ function iar_build_package() {
 		$zip->addFile( $file, $root . '/' . ltrim( str_replace( '\\', '/', substr( $file, strlen( IAR_DIR ) ) ), '/' ) );
 	}
 	$zip->close();
-	rename( $tmp, $path );
+	iar_fs()->move( $tmp, $path, true );
 	update_option( 'iar_package_stamp', $stamp, false );
 
 	return $path;

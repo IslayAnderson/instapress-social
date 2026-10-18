@@ -118,7 +118,7 @@ add_action( 'acf/include_fields', function () {
 // Stories rarely need a title — default one so the admin list stays readable.
 add_filter( 'wp_insert_post_data', function ( $data ) {
 	if ( IAR_STORY_TYPE === $data['post_type'] && '' === trim( (string) $data['post_title'] ) && 'auto-draft' !== $data['post_status'] ) {
-		$data['post_title'] = sprintf( __( 'Story — %s', 'instapress-social' ), wp_date( 'j M Y H:i' ) );
+		$data['post_title'] = sprintf( /* translators: %s: date and time */ __( 'Story — %s', 'instapress-social' ), wp_date( 'j M Y H:i' ) );
 	}
 	return $data;
 } );

@@ -2,8 +2,9 @@
 Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.25.1
+Stable tag: 1.25.2
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -55,6 +56,11 @@ Every event carries this site's domain, the plugin and WordPress versions and th
 Turn it off under Settings → instapress-social → Privacy ("Share anonymous usage statistics"), with `define( 'IAR_DISABLE_SETUP_EVENT', true );` in wp-config.php, or by returning false from the `iar_send_usage_stats` filter.
 
 == Changelog ==
+
+= 1.25.2 =
+* Plugin Check clean-up: translator comments on every translatable string with placeholders; the RSS feed escapes through esc_xml() directly; file operations (import jobs, the download package, imported media dates) use WordPress's filesystem API instead of PHP's unlink/rmdir/rename/touch/move_uploaded_file; request values are sanitised where they're read; templates/parts/sprite.php blocks direct access; readme gains "Tested up to".
+* The plugin no longer borrows ACF's text domain to recognise its "valid image" message; the media gallery is validated from the files themselves.
+* Release zips and the "Get instapress-social" download no longer include hidden files (an IDE settings folder had slipped in).
 
 = 1.25.1 =
 * Fixed: Unfollow could look like it did nothing. Following someone again through their new feed address (/social/feed/) added them a second time, so unfollowing removed one copy and they stayed listed. Following the same person again now updates the existing follow, Unfollow removes every copy, and any duplicates already in your list are merged.
