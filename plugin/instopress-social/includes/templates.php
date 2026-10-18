@@ -192,8 +192,10 @@ add_action( 'wp_enqueue_scripts', function () {
 	} else {
 		wp_enqueue_style( 'instopress-social', iar_asset_url( 'css/style.css' ), array(), IAR_VERSION );
 	}
-	wp_enqueue_script( 'instopress-social', iar_asset_url( 'js/app.js' ), array(), IAR_VERSION, true );
-	wp_enqueue_script( 'instopress-social-stories', iar_asset_url( 'js/stories.js' ), array(), IAR_VERSION, true );
+	// In the footer and deferred: nothing on the page waits for them (WordPress before 6.3 ignores the strategy and just puts them in the footer).
+	$defer = array( 'strategy' => 'defer', 'in_footer' => true );
+	wp_enqueue_script( 'instopress-social', iar_asset_url( 'js/app.js' ), array(), IAR_VERSION, $defer );
+	wp_enqueue_script( 'instopress-social-stories', iar_asset_url( 'js/stories.js' ), array(), IAR_VERSION, $defer );
 	wp_localize_script( 'instopress-social', 'IAR', array(
 		'hashtagBase' => iar_profile_url(),
 		'people'      => iar_known_people(),
@@ -205,7 +207,7 @@ add_action( 'wp_enqueue_scripts', function () {
 		iar_captcha_enqueue();
 	}
 	if ( iar_is_compose() ) {
-		wp_enqueue_script( 'instopress-social-compose', iar_asset_url( 'js/compose.js' ), array(), IAR_VERSION, true );
+		wp_enqueue_script( 'instopress-social-compose', iar_asset_url( 'js/compose.js' ), array(), IAR_VERSION, $defer );
 	}
 } );
 

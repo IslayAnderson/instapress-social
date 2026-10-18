@@ -103,8 +103,10 @@ iar_template_part( 'header' );
 						$tile = array();
 						if ( ! is_paged() ) {
 							$tile = array( 'index' => $GLOBALS['wp_query']->current_post, 'priority' => false );
-							// Fetch the first tile that shows a picture first (text cards and videos without a poster have none).
-							if ( $priority_left && $tile['index'] < 9 ) {
+							// Fetch the pictures in the first row first: the tiles are all the same size, so the
+							// largest paint is whichever of them shows first. If the first row has none (text
+							// cards, videos without a poster), the first picture below it.
+							if ( ( $priority_left || $tile['index'] < 3 ) && $tile['index'] < 9 ) {
 								$media = iar_get_media( null, 1 );
 								if ( $media && 'text' !== $media[0]['type'] && $media[0]['thumb'] ) {
 									$tile['priority'] = true;
