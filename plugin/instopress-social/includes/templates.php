@@ -179,7 +179,19 @@ add_action( 'wp_enqueue_scripts', function () {
 	if ( ! iar_templates_enabled() || ! iar_is_view() ) {
 		return;
 	}
-	wp_enqueue_style( 'instopress-social', iar_asset_url( 'css/style.css' ), array(), IAR_VERSION );
+	/*
+	 * The stylesheet styles the whole page here, so it goes inline in <head>: a separate
+	 * file would hold up the first paint, and deferring it would flash an unstyled page.
+	 * (About 7 KB compressed.) Return false from iar_inline_styles to link the file instead.
+	 */
+	$css = apply_filters( 'iar_inline_styles', true ) ? (string) iar_fs()->get_contents( iar_asset_path( 'css/style.css' ) ) : '';
+	if ( '' !== $css ) {
+		wp_register_style( 'instopress-social', false, array(), IAR_VERSION ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+		wp_enqueue_style( 'instopress-social' );
+		wp_add_inline_style( 'instopress-social', $css );
+	} else {
+		wp_enqueue_style( 'instopress-social', iar_asset_url( 'css/style.css' ), array(), IAR_VERSION );
+	}
 	wp_enqueue_script( 'instopress-social', iar_asset_url( 'js/app.js' ), array(), IAR_VERSION, true );
 	wp_enqueue_script( 'instopress-social-stories', iar_asset_url( 'js/stories.js' ), array(), IAR_VERSION, true );
 	wp_localize_script( 'instopress-social', 'IAR', array(

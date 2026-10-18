@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       instopress-social Pro
  * Description:       Your own instopress-social profile on WordPress: profile grid and post pages, short-code permalinks (/p/DYLRvc7CC0h/), aspect ratios, following other instopress-social sites with a home feed, and a WP-CLI importer.
- * Version:           1.29.0
+ * Version:           1.30.0
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Islay Anderson
@@ -31,7 +31,7 @@ if ( function_exists( 'igp_generate_shortcode' ) || defined( 'IGP_POST_TYPE' ) )
 	return;
 }
 
-define( 'IAR_VERSION', '1.29.0' );
+define( 'IAR_VERSION', '1.30.0' );
 define( 'IAR_FILE', __FILE__ );
 define( 'IAR_DIR', plugin_dir_path( __FILE__ ) );
 // Pro edition: includes/pro/ is present (bot protection, GitHub updates). The WordPress.org build leaves it out (bin/build.sh).
@@ -45,13 +45,23 @@ define( 'IAR_URL', plugin_dir_url( __FILE__ ) );
  * @param string $file Path inside assets/, e.g. 'js/app.js'.
  */
 function iar_asset_url( $file ) {
+	return IAR_URL . 'assets/' . iar_asset_file( $file );
+}
+
+/** The same file as iar_asset_url(), as a path on disk. */
+function iar_asset_path( $file ) {
+	return IAR_DIR . 'assets/' . iar_asset_file( $file );
+}
+
+/** 'js/app.js' → 'js/app.min.js' when that exists and SCRIPT_DEBUG is off. */
+function iar_asset_file( $file ) {
 	if ( ! ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ) {
 		$min = preg_replace( '/\.(js|css)$/', '.min.$1', $file );
 		if ( is_file( IAR_DIR . 'assets/' . $min ) ) {
-			return IAR_URL . 'assets/' . $min;
+			return $min;
 		}
 	}
-	return IAR_URL . 'assets/' . $file;
+	return $file;
 }
 
 /** Post type + field names. The importer, templates and editor button all use these. */
