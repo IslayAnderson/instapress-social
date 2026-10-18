@@ -2,7 +2,7 @@
 /**
  * The folders the plugin lives under, set in Settings → instapress-social:
  *
- *   profile folder  /gram/          (and /gram/home/, /gram/new/)
+ *   profile folder  /social/        (and /social/home/, /social/new/)
  *   post folder     /p/<shortcode>/
  *
  * The iar_archive_slug / iar_post_slug filters still win over the settings.
@@ -13,7 +13,7 @@
 defined( 'ABSPATH' ) || exit;
 
 function iar_archive_slug() {
-	return (string) apply_filters( 'iar_archive_slug', iar_setting( 'archive_slug' ) ?: 'gram' );
+	return (string) apply_filters( 'iar_archive_slug', iar_setting( 'archive_slug' ) ?: 'social' );
 }
 
 function iar_post_slug() {
@@ -59,7 +59,7 @@ function iar_validate_slug( $slug, $other = '' ) {
 
 /** Settings sanitiser: valid new folders, or keep the current ones and say why. */
 function iar_sanitize_slugs( $in ) {
-	$current = array( 'archive_slug' => iar_setting( 'archive_slug' ) ?: 'gram', 'post_slug' => iar_setting( 'post_slug' ) ?: 'p' );
+	$current = array( 'archive_slug' => iar_setting( 'archive_slug' ) ?: 'social', 'post_slug' => iar_setting( 'post_slug' ) ?: 'p' );
 	$labels  = array( 'archive_slug' => __( 'Profile folder', 'instapress-social' ), 'post_slug' => __( 'Post folder', 'instapress-social' ) );
 	$out     = $current;
 	foreach ( array( 'archive_slug' => 'post_slug', 'post_slug' => 'archive_slug' ) as $key => $other_key ) {
@@ -80,9 +80,12 @@ function iar_sanitize_slugs( $in ) {
 
 // A folder changed: remember the old one (for redirects) and rebuild the routes.
 add_action( 'update_option_' . IAR_OPTION, function ( $old, $new ) {
+	if ( ! empty( $GLOBALS['iar_pinning_defaults'] ) ) {
+		return;
+	}
 	$history = (array) get_option( 'iar_slug_history', array() );
 	$changed = false;
-	foreach ( array( 'archive_slug' => 'gram', 'post_slug' => 'p' ) as $key => $default ) {
+	foreach ( array( 'archive_slug' => iar_defaults()['archive_slug'], 'post_slug' => iar_defaults()['post_slug'] ) as $key => $default ) {
 		$was = ( (array) $old )[ $key ] ?? $default;
 		$is  = ( (array) $new )[ $key ] ?? $default;
 		if ( $was && $was !== $is ) {

@@ -16,14 +16,14 @@ function iar_defaults() {
 		'avatar_id'       => 0,
 		'followers'       => '',
 		'following'       => '',
-		'archive_slug'    => 'gram',
+		'archive_slug'    => 'social',
 		'post_slug'       => 'p',
 		'per_page'        => 24,
 		'grid_ratio'      => '1:1',
 		'use_templates'   => 1,
 		'isolate_styles'  => 1,
-		'hide_admin_bar'  => 0,
-		'private_home'    => 0,
+		'hide_admin_bar'  => 1,
+		'private_home'    => 1,
 		'private_follows' => 0,
 		'share_plugin'    => 1,
 		'allow_comments'  => 1,
@@ -39,6 +39,31 @@ function iar_defaults() {
 		'story_after'     => 'archive',
 	);
 }
+
+/**
+ * Defaults changed in 1.22.0 (profile folder /social/, toolbar hidden, home
+ * feed private). Sites that were already running keep what they had: any of
+ * these they never saved are pinned to the old default, once, so an update
+ * doesn't move their profile address or change who can see what.
+ */
+function iar_pin_previous_defaults() {
+	if ( get_option( 'iar_defaults_pinned' ) ) {
+		return;
+	}
+	// Running an older version before this one, or (very old installs) has settings or posts already.
+	$was      = (string) get_option( 'iar_version' );
+	$existing = $was ? version_compare( $was, '1.22.0', '<' ) : ( (bool) get_option( IAR_OPTION ) || (int) wp_count_posts( IAR_POST_TYPE )->publish > 0 );
+	if ( $existing ) {
+		$saved = (array) get_option( IAR_OPTION, array() );
+		$saved += array( 'archive_slug' => 'gram', 'hide_admin_bar' => 0, 'private_home' => 0 );
+		$GLOBALS['iar_pinning_defaults'] = true; // not a real change: no "folder changed" redirect
+		update_option( IAR_OPTION, $saved );
+		unset( $GLOBALS['iar_pinning_defaults'] );
+	}
+	update_option( 'iar_defaults_pinned', 1, false );
+}
+// Before the post type and routes are registered (init 10).
+add_action( 'init', 'iar_pin_previous_defaults', 1 );
 
 function iar_settings() {
 	return wp_parse_args( (array) get_option( IAR_OPTION, array() ), iar_defaults() );

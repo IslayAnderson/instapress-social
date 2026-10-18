@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.21.0
+Stable tag: 1.22.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -13,14 +13,14 @@ An instapress-social archive of your own posts — and a feed of the people you 
 
 * `instapress-social` post type with ACF fields (ig_shortcode, ig_caption, ig_media, ig_media_type, ig_aspect_ratio, ig_posted_at, ig_likes, ig_comments, ig_location, ig_url = original URL).
 * Short-code permalinks — /p/DYLRvc7CC0h/ — with a "Generate shortcode" button on the edit screen. Generated codes encode the post date the same way real ones do.
-* Profile grid at /gram/ (posts + reels tabs, hover counts, load more) and a single post page with carousel.
+* Profile grid at /social/ (posts + reels tabs, hover counts, load more) and a single post page with carousel.
 * Per-post aspect ratio — Auto, 1:1, 4:5, 3:4, 1.91:1, 9:16 or Original. Auto uses the first image, kept within 4:5…1.91:1; every carousel slide is cropped to the post's ratio.
 * Grid tiles square (classic) or 3:4 / 4:5 portrait (Settings).
-* Following: the Follow button on a profile copies its feed link (/feed/insta/). Paste it into instapress-social → Following on your own site and their posts appear in your home feed at /gram/home/, refreshed hourly.
+* Following: the Follow button on a profile copies its feed link (/feed/insta/). Paste it into instapress-social → Following on your own site and their posts appear in your home feed at /social/home/, refreshed hourly.
 * Likes and comments on WordPress's own comment system: Instagram-style comment panel with replies, moderation/Akismet/notifications as usual; likes for visitors without accounts (one per browser), double-tap to like.
 * Stories: photos/videos that disappear after 24 hours (configurable), shown in a full-screen viewer from your profile picture and the home feed's stories row. They're shared with followers through the same feed, and expired stories are archived privately (or deleted).
 * "Get instapress-social" button: visitors can download the exact plugin version installed on your site.
-* Hashtags link to your own grid filtered by tag (/gram/?hashtag=film); @mentions link to people you follow.
+* Hashtags link to your own grid filtered by tag (/social/?hashtag=film); @mentions link to people you follow.
 * Updates from GitHub Releases: "Update now" and "Enable auto-updates" on the Plugins screen work as for any plugin (WordPress 5.8+).
 * Settings → instapress-social for the profile header (picture, username, bio, website, follower counts).
 * WP-CLI importer.
@@ -48,6 +48,10 @@ Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use
 When the plugin is set up (activated, or first run after updating), it sends one "plugin_setup" event to the plugin author's Google Analytics, so they know roughly how many sites use it. To send it, the plugin first reads the Analytics details from blog.islayanderson.co.uk (a plain request; nothing about your site is included). It contains the site's domain, the plugin and WordPress versions and the environment type (production, staging, local) — nothing about your visitors, posts or users. To turn it off, add `define( 'IAR_DISABLE_SETUP_EVENT', true );` to wp-config.php, or return false from the `iar_send_setup_event` filter.
 
 == Changelog ==
+
+= 1.22.0 =
+* New defaults for new installs: profile at /social/ (was /gram/), the WordPress toolbar hidden on instapress-social pages, and the home feed private to you. Everything else is unchanged.
+* Sites already running the plugin keep their current settings: if you never changed these, your profile stays at /gram/, the toolbar still shows and your home feed stays public. Change any of them under Settings → instapress-social.
 
 = 1.21.0 =
 * Privacy options under Settings → instapress-social → Templates → Privacy:

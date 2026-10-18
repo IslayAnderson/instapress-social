@@ -15,17 +15,17 @@ import/                      your posts.json + downloaded media (git-ignored)
 
 - **Post type** `instapress-social` with ACF fields (`ig_shortcode`, `ig_caption`, `ig_media`, `ig_media_type`, `ig_aspect_ratio`, `ig_posted_at`, `ig_likes`, `ig_comments`, `ig_location`, `ig_url` = original URL).
 - **Permalinks** `/p/DYLRvc7CC0h/`, with a **Generate shortcode** button on the edit screen.
-- **Templates**: profile grid at `/gram/` (Posts / Reels tabs, load more, `?hashtag=` filter), single post at `/p/<shortcode>/`, home feed at `/gram/home/`. Override any template from your theme in `instapress-social/`.
+- **Templates**: profile grid at `/social/` (Posts / Reels tabs, load more, `?hashtag=` filter), single post at `/p/<shortcode>/`, home feed at `/social/home/`. Override any template from your theme in `instapress-social/`.
 - **Aspect ratios** per post (Auto, 1:1, 4:5, 3:4, 1.91:1, 9:16, Original) and grid tile shape.
 - **Following**: the **Follow** button copies the profile's feed link (`/feed/insta/`). Paste it into *instapress-social → Following* on your own site; their posts show in your home feed, refreshed hourly.
 - **Likes & comments** on WordPress's own comment system: comment panel with replies (Discussion settings, moderation and Akismet apply), likes for visitors without accounts, double-tap to like.
 - **Bot protection** (optional): Cloudflare Turnstile, Google reCAPTCHA v3 or reCAPTCHA v2 (invisible) on comments and likes, verified server-side; choose and add keys under *Settings → instapress-social*.
-- **Mobile posting** at `/gram/new/` (the **+** in the bottom bar): pick photos/videos, reorder, choose the shape, caption and share as a post or a story — no wp-admin needed. Logged-in authors only.
-- **Text posts**: rich text on a coloured or gradient card (size, font, alignment, colours), drawn as SVG with real text. Compose them in the **Text** tab at `/gram/new/` or in wp-admin.
+- **Mobile posting** at `/social/new/` (the **+** in the bottom bar): pick photos/videos, reorder, choose the shape, caption and share as a post or a story — no wp-admin needed. Logged-in authors only.
+- **Text posts**: rich text on a coloured or gradient card (size, font, alignment, colours), drawn as SVG with real text. Compose them in the **Text** tab at `/social/new/` or in wp-admin.
 - **Post menu**: logged in, the ⋯ on a post changes who can see it (Published / Private / Draft), bins it, or opens the editor.
 - **Stories**: photos/videos that disappear after 24h, played full-screen from your profile picture and the home feed's stories row; followers get them through the same feed.
 - **Get instapress-social**: a profile button that downloads the plugin version installed on the site (`/?download=instapress-social`).
-- **Your own addresses**: change the profile folder (`/gram/`) and post folder (`/p/`) in Settings; old addresses redirect.
+- **Your own addresses**: change the profile folder (`/social/`) and post folder (`/p/`) in Settings; old addresses redirect.
 - **Settings → instapress-social**: profile picture, username, bio, website, counts, grid, templates, sharing.
 
 ## Importing from imginn
