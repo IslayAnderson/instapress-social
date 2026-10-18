@@ -10,6 +10,11 @@ function iar_is_view() {
 	return is_post_type_archive( IAR_POST_TYPE ) || is_singular( IAR_POST_TYPE ) || iar_is_home() || ( function_exists( 'iar_is_compose' ) && iar_is_compose() );
 }
 
+// Settings → "Hide the WordPress toolbar on these pages".
+add_filter( 'show_admin_bar', function ( $show ) {
+	return ( $show && iar_setting( 'hide_admin_bar' ) && did_action( 'wp' ) && iar_is_view() ) ? false : $show;
+}, 20 );
+
 /* -------------------------------------------------------------------------
  * Home feed: /gram/home/ — your posts plus everyone you follow
  * ---------------------------------------------------------------------- */

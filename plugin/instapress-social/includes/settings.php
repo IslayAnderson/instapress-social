@@ -22,6 +22,7 @@ function iar_defaults() {
 		'grid_ratio'      => '1:1',
 		'use_templates'   => 1,
 		'isolate_styles'  => 1,
+		'hide_admin_bar'  => 0,
 		'share_plugin'    => 1,
 		'allow_comments'  => 1,
 		'allow_likes'     => 1,
@@ -69,6 +70,7 @@ add_action( 'admin_init', function () {
 				'grid_ratio'     => in_array( $in['grid_ratio'] ?? '', array( '1:1', '3:4', '4:5' ), true ) ? $in['grid_ratio'] : '1:1',
 				'use_templates'  => empty( $in['use_templates'] ) ? 0 : 1,
 				'isolate_styles' => empty( $in['isolate_styles'] ) ? 0 : 1,
+				'hide_admin_bar' => empty( $in['hide_admin_bar'] ) ? 0 : 1,
 				'share_plugin'   => empty( $in['share_plugin'] ) ? 0 : 1,
 				'allow_comments' => empty( $in['allow_comments'] ) ? 0 : 1,
 				'allow_likes'    => empty( $in['allow_likes'] ) ? 0 : 1,
@@ -166,6 +168,9 @@ function iar_render_settings() {
 						</p>
 						<br>
 						<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[isolate_styles]" value="1" <?php checked( $s['isolate_styles'] ); ?>> <?php esc_html_e( 'Don\'t load the theme\'s stylesheets on these pages', 'instapress-social' ); ?></label>
+						<br>
+						<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[hide_admin_bar]" value="1" <?php checked( $s['hide_admin_bar'] ); ?>> <?php esc_html_e( 'Hide the WordPress toolbar on these pages', 'instapress-social' ); ?></label>
+						<p class="description"><?php esc_html_e( 'For a cleaner, app-like look when you\'re logged in. wp-admin is still a tap away: the ⋯ menu on a post has "Edit in WordPress".', 'instapress-social' ); ?></p>
 					</td>
 				</tr>
 				<tr>
