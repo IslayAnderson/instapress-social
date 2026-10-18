@@ -5,8 +5,10 @@
  * plugin's Google Analytics property through the GA4 Measurement Protocol.
  *
  * Sent: the site's domain, plugin / WordPress version and environment type.
- * Nothing about visitors, posts or users. Turn it off with
- * define( 'IAR_DISABLE_SETUP_EVENT', true ) or the iar_send_setup_event filter.
+ * Nothing about visitors, posts or users. includes/usage-stats.php sends
+ * admin-screen events through the same iar_ga_send(). Turn all of it off in
+ * Settings → Privacy, with define( 'IAR_DISABLE_SETUP_EVENT', true ), or the
+ * iar_send_usage_stats filter (iar_send_setup_event: just this one).
  *
  * The Measurement Protocol API secret isn't in this code: it's fetched from
  * IAR_GA_CONFIG_URL (the plugin author's site) and cached. IAR_GA_API_SECRET /
@@ -58,29 +60,57 @@ function iar_ga_client_id() {
 	return $id;
 }
 
-function iar_setup_event_payload( $event = 'plugin_setup' ) {
+/** Usage statistics on? (Settings → Privacy, the IAR_DISABLE_SETUP_EVENT constant, the iar_send_usage_stats filter.) */
+function iar_ga_enabled() {
+	if ( defined( 'IAR_DISABLE_SETUP_EVENT' ) && IAR_DISABLE_SETUP_EVENT ) {
+		return false;
+	}
+	return (bool) apply_filters( 'iar_send_usage_stats', (bool) iar_setting( 'usage_stats' ) );
+}
+
+/** GA groups events into sessions: one per site per half hour of activity. */
+function iar_ga_session_id() {
+	$id = get_transient( 'iar_ga_session' );
+	if ( ! $id ) {
+		$id = (string) time();
+	}
+	set_transient( 'iar_ga_session', $id, 30 * MINUTE_IN_SECONDS );
+	return $id;
+}
+
+/** One event, with what every event carries: the site's domain, versions and environment. */
+function iar_ga_payload( $name, $params = array() ) {
 	return array(
 		'client_id' => iar_ga_client_id(),
 		'events'    => array(
 			array(
-				'name'   => $event,
-				'params' => array(
-					'domain'               => (string) wp_parse_url( home_url(), PHP_URL_HOST ),
-					'plugin_version'       => IAR_VERSION,
-					'wp_version'           => get_bloginfo( 'version' ),
-					'environment'          => wp_get_environment_type(),
-					// These two make the event show up in GA's standard reports.
-					'session_id'           => (string) time(),
-					'engagement_time_msec' => 1,
+				'name'   => $name,
+				'params' => array_merge(
+					array(
+						'domain'               => (string) wp_parse_url( home_url(), PHP_URL_HOST ),
+						'plugin_version'       => IAR_VERSION,
+						'wp_version'           => get_bloginfo( 'version' ),
+						'environment'          => wp_get_environment_type(),
+						// These two make the event show up in GA's standard reports.
+						'session_id'           => iar_ga_session_id(),
+						'engagement_time_msec' => 1,
+					),
+					array_map( function ( $v ) {
+						return is_bool( $v ) ? (int) $v : ( is_scalar( $v ) ? mb_substr( (string) $v, 0, 100 ) : '' );
+					}, (array) $params )
 				),
 			),
 		),
 	);
 }
 
-/** @param bool $debug Use GA's validation endpoint and return its reply. */
-function iar_send_setup_event( $debug = false ) {
-	if ( ( defined( 'IAR_DISABLE_SETUP_EVENT' ) && IAR_DISABLE_SETUP_EVENT ) || ! apply_filters( 'iar_send_setup_event', true ) ) {
+/**
+ * Send one event. Doesn't wait for GA's answer, so it never slows a page down.
+ *
+ * @param bool $debug Use GA's validation endpoint and return its reply.
+ */
+function iar_ga_send( $name, $params = array(), $debug = false ) {
+	if ( ! iar_ga_enabled() ) {
 		return false;
 	}
 	$ga = iar_ga_config();
@@ -95,12 +125,20 @@ function iar_send_setup_event( $debug = false ) {
 		'https://www.google-analytics.com/' . ( $debug ? 'debug/mp/collect' : 'mp/collect' )
 	);
 	$res = wp_remote_post( $url, array(
-		'body'     => wp_json_encode( iar_setup_event_payload() ),
+		'body'     => wp_json_encode( iar_ga_payload( $name, $params ) ),
 		'headers'  => array( 'Content-Type' => 'application/json' ),
 		'timeout'  => $debug ? 10 : 3,
 		'blocking' => $debug,
 	) );
 	return $debug ? $res : true;
+}
+
+/** @param bool $debug Use GA's validation endpoint and return its reply. */
+function iar_send_setup_event( $debug = false ) {
+	if ( ! apply_filters( 'iar_send_setup_event', true ) ) {
+		return false;
+	}
+	return iar_ga_send( 'plugin_setup', array(), $debug );
 }
 
 // Activation only flags it; the event goes out on the next admin page load.

@@ -25,6 +25,7 @@ function iar_defaults() {
 		'hide_admin_bar'  => 1,
 		'private_home'    => 1,
 		'private_follows' => 0,
+		'usage_stats'     => 1,
 		'share_plugin'    => 1,
 		'allow_comments'  => 1,
 		'allow_likes'     => 1,
@@ -100,6 +101,7 @@ add_action( 'admin_init', function () {
 				'hide_admin_bar' => empty( $in['hide_admin_bar'] ) ? 0 : 1,
 				'private_home'   => empty( $in['private_home'] ) ? 0 : 1,
 				'private_follows' => empty( $in['private_follows'] ) ? 0 : 1,
+				'usage_stats'    => empty( $in['usage_stats'] ) ? 0 : 1,
 				'share_plugin'   => empty( $in['share_plugin'] ) ? 0 : 1,
 				'allow_comments' => empty( $in['allow_comments'] ) ? 0 : 1,
 				'allow_likes'    => empty( $in['allow_likes'] ) ? 0 : 1,
@@ -210,6 +212,9 @@ function iar_render_settings() {
 						<br>
 						<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[private_follows]" value="1" <?php checked( $s['private_follows'] ); ?>> <?php esc_html_e( 'Hide follower and following counts from visitors', 'instapress-social' ); ?></label>
 						<p class="description"><?php esc_html_e( 'You (and anyone who can edit posts here) still see both.', 'instapress-social' ); ?></p>
+						<br>
+						<label id="iar-usage-stats"><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[usage_stats]" value="1" <?php checked( $s['usage_stats'] ); ?>> <?php esc_html_e( 'Share anonymous usage statistics with the plugin\'s author', 'instapress-social' ); ?></label>
+						<p class="description"><?php esc_html_e( 'Helps decide what to improve. Sent to Google Analytics: this site\'s domain, the plugin and WordPress versions, which instapress-social admin screens are opened and which actions are used (e.g. "settings saved", "post published"). Never your posts, settings values, users or visitors.', 'instapress-social' ); ?></p>
 					</td>
 				</tr>
 				<tr>

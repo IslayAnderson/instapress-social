@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.22.0
+Stable tag: 1.23.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -45,9 +45,19 @@ Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use
 
 == Privacy ==
 
-When the plugin is set up (activated, or first run after updating), it sends one "plugin_setup" event to the plugin author's Google Analytics, so they know roughly how many sites use it. To send it, the plugin first reads the Analytics details from blog.islayanderson.co.uk (a plain request; nothing about your site is included). It contains the site's domain, the plugin and WordPress versions and the environment type (production, staging, local) — nothing about your visitors, posts or users. To turn it off, add `define( 'IAR_DISABLE_SETUP_EVENT', true );` to wp-config.php, or return false from the `iar_send_setup_event` filter.
+The plugin shares anonymous usage statistics with its author through Google Analytics, to count installs and decide what to improve:
+
+* When it's set up (activated, or first run after updating): one "plugin_setup" event.
+* In wp-admin: which instapress-social screens are opened (posts, editor, stories, Import, Following, Settings) and which actions are used — settings saved (the names of the settings that changed, not their values), following or unfollowing a feed, starting or cancelling an import, checking for updates, publishing from the composer (post, text or story), and changing a post's status.
+
+Every event carries this site's domain, the plugin and WordPress versions and the environment type (production, staging, local). Never post content, settings values, users or visitors. To send them, the plugin first reads the Analytics details from blog.islayanderson.co.uk (a plain request; nothing about your site is included).
+
+Turn it off under Settings → instapress-social → Privacy ("Share anonymous usage statistics"), with `define( 'IAR_DISABLE_SETUP_EVENT', true );` in wp-config.php, or by returning false from the `iar_send_usage_stats` filter.
 
 == Changelog ==
+
+= 1.23.0 =
+* Anonymous usage statistics from the plugin's admin screens: which screens are opened and which actions are used (names only, never content or people), sent to the plugin author's Google Analytics alongside the existing setup event. A notice on the plugin's screens says so once, and Settings → instapress-social → Privacy has a "Share anonymous usage statistics" switch to turn all of it off. See Privacy.
 
 = 1.22.0 =
 * New defaults for new installs: profile at /social/ (was /gram/), the WordPress toolbar hidden on instapress-social pages, and the home feed private to you. Everything else is unchanged.
