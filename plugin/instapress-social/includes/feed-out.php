@@ -1,6 +1,7 @@
 <?php
 /**
- * The feed other instapress-social sites follow: /feed/insta/
+ * The feed other instapress-social sites follow: /social/feed/ (inside the
+ * profile folder). The old address, /feed/insta/, redirects there.
  *
  * Plain RSS 2.0 so any reader can use it, plus Media RSS for the images/videos
  * and an insta: namespace for the profile and the bits the cards need
@@ -13,12 +14,28 @@ const IAR_NS     = 'urn:instapress-social:1';
 const IAR_OLD_NS = 'urn:insta-archive:1'; // feeds from versions before 1.3.0
 
 function iar_feed_url() {
-	return get_feed_link( 'insta' );
+	// Without pretty permalinks there are no folders: ?feed=insta.
+	return get_option( 'permalink_structure' ) ? home_url( user_trailingslashit( iar_archive_slug() . '/feed' ) ) : get_feed_link( 'insta' );
 }
 
 add_action( 'init', function () {
-	add_feed( 'insta', 'iar_render_feed' );
-} );
+	add_feed( 'insta', 'iar_render_feed' ); // also keeps /feed/insta/ resolving, for the redirect below
+	// Before the post type registers its archive feeds (init 10), whose …/feed/ rule would otherwise win.
+	add_rewrite_rule( '^' . preg_quote( iar_archive_slug(), '/' ) . '/feed/?$', 'index.php?feed=insta', 'top' );
+}, 5 );
+
+// The feed used to live at /feed/insta/: send readers and following sites to the new address.
+add_action( 'template_redirect', function () {
+	if ( ! is_feed( 'insta' ) || ! get_option( 'permalink_structure' ) ) {
+		return;
+	}
+	$here = trim( (string) wp_parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ), '/' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+	$feed = trim( (string) wp_parse_url( iar_feed_url(), PHP_URL_PATH ), '/' );
+	if ( $here !== $feed ) {
+		wp_safe_redirect( iar_feed_url(), 301 );
+		exit;
+	}
+}, 1 );
 
 /**
  * When the feed last changed (GMT, 'Y-m-d H:i:s'). WordPress would only look

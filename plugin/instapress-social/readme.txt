@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.23.0
+Stable tag: 1.24.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -16,7 +16,7 @@ An instapress-social archive of your own posts — and a feed of the people you 
 * Profile grid at /social/ (posts + reels tabs, hover counts, load more) and a single post page with carousel.
 * Per-post aspect ratio — Auto, 1:1, 4:5, 3:4, 1.91:1, 9:16 or Original. Auto uses the first image, kept within 4:5…1.91:1; every carousel slide is cropped to the post's ratio.
 * Grid tiles square (classic) or 3:4 / 4:5 portrait (Settings).
-* Following: the Follow button on a profile copies its feed link (/feed/insta/). Paste it into instapress-social → Following on your own site and their posts appear in your home feed at /social/home/, refreshed hourly.
+* Following: the Follow button on a profile copies its feed link (/social/feed/). Paste it into instapress-social → Following on your own site and their posts appear in your home feed at /social/home/, refreshed hourly.
 * Likes and comments on WordPress's own comment system: Instagram-style comment panel with replies, moderation/Akismet/notifications as usual; likes for visitors without accounts (one per browser), double-tap to like.
 * Stories: photos/videos that disappear after 24 hours (configurable), shown in a full-screen viewer from your profile picture and the home feed's stories row. They're shared with followers through the same feed, and expired stories are archived privately (or deleted).
 * "Get instapress-social" button: visitors can download the exact plugin version installed on your site.
@@ -55,6 +55,10 @@ Every event carries this site's domain, the plugin and WordPress versions and th
 Turn it off under Settings → instapress-social → Privacy ("Share anonymous usage statistics"), with `define( 'IAR_DISABLE_SETUP_EVENT', true );` in wp-config.php, or by returning false from the `iar_send_usage_stats` filter.
 
 == Changelog ==
+
+= 1.24.0 =
+* Your feed has moved inside your profile folder: /social/feed/ (or /gram/feed/, whatever your profile folder is) instead of /feed/insta/. It follows the folder if you change it.
+* Nothing breaks: /feed/insta/ (and ?feed=insta) redirect permanently to the new address, and sites following you switch to it automatically on their next refresh once they're on 1.24.0.
 
 = 1.23.0 =
 * Anonymous usage statistics from the plugin's admin screens: which screens are opened and which actions are used (names only, never content or people), sent to the plugin author's Google Analytics alongside the existing setup event. A notice on the plugin's screens says so once, and Settings → instapress-social → Privacy has a "Share anonymous usage statistics" switch to turn all of it off. See Privacy.

@@ -17,7 +17,7 @@ import/                      your posts.json + downloaded media (git-ignored)
 - **Permalinks** `/p/DYLRvc7CC0h/`, with a **Generate shortcode** button on the edit screen.
 - **Templates**: profile grid at `/social/` (Posts / Reels tabs, load more, `?hashtag=` filter), single post at `/p/<shortcode>/`, home feed at `/social/home/`. Override any template from your theme in `instapress-social/`.
 - **Aspect ratios** per post (Auto, 1:1, 4:5, 3:4, 1.91:1, 9:16, Original) and grid tile shape.
-- **Following**: the **Follow** button copies the profile's feed link (`/feed/insta/`). Paste it into *instapress-social → Following* on your own site; their posts show in your home feed, refreshed hourly.
+- **Following**: the **Follow** button copies the profile's feed link (`/social/feed/`). Paste it into *instapress-social → Following* on your own site; their posts show in your home feed, refreshed hourly.
 - **Likes & comments** on WordPress's own comment system: comment panel with replies (Discussion settings, moderation and Akismet apply), likes for visitors without accounts, double-tap to like.
 - **Bot protection** (optional): Cloudflare Turnstile, Google reCAPTCHA v3 or reCAPTCHA v2 (invisible) on comments and likes, verified server-side; choose and add keys under *Settings → instapress-social*.
 - **Mobile posting** at `/social/new/` (the **+** in the bottom bar): pick photos/videos, reorder, choose the shape, caption and share as a post or a story — no wp-admin needed. Logged-in authors only.

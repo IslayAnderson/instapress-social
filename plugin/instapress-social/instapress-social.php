@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       instapress-social
  * Description:       Your own instapress-social profile on WordPress: profile grid and post pages, short-code permalinks (/p/DYLRvc7CC0h/), aspect ratios, following other instapress-social sites with a home feed, and a WP-CLI importer.
- * Version:           1.23.0
+ * Version:           1.24.0
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Islay Anderson
@@ -31,7 +31,7 @@ if ( function_exists( 'igp_generate_shortcode' ) || defined( 'IGP_POST_TYPE' ) )
 	return;
 }
 
-define( 'IAR_VERSION', '1.23.0' );
+define( 'IAR_VERSION', '1.24.0' );
 define( 'IAR_FILE', __FILE__ );
 define( 'IAR_DIR', plugin_dir_path( __FILE__ ) );
 define( 'IAR_URL', plugin_dir_url( __FILE__ ) );
@@ -89,7 +89,7 @@ register_deactivation_hook( __FILE__, function () {
 	flush_rewrite_rules();
 } );
 
-// Flush once after activation or an update (new routes like /gram/home/ and /feed/insta/).
+// Flush once after activation or an update (new routes like /social/home/ and /social/feed/).
 add_action( 'init', function () {
 	if ( get_option( 'iar_flush_rewrites' ) || get_option( 'iar_version' ) !== IAR_VERSION ) {
 		flush_rewrite_rules();

@@ -8,7 +8,7 @@
  * - Expiry: anything older than the window is hidden immediately on the
  *   front end, and an hourly cron moves it to a private "Expired" status
  *   (the archive) or deletes it, per Settings.
- * - Stories are published in /feed/insta/ as <insta:story> channel elements
+ * - Stories are published in the feed (/social/feed/) as <insta:story> channel elements
  *   (not <item>s, so normal RSS readers ignore them) and read back from
  *   people you follow.
  */

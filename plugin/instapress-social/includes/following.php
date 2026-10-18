@@ -100,7 +100,8 @@ function iar_parse_feed( $xml, $feed_url ) {
 		'name'     => sanitize_text_field( (string) $ns->name ),
 		'avatar'   => iar_clean_url( (string) $ns->avatar ),
 		'profile'  => iar_clean_url( (string) $ns->profile ) ?: iar_clean_url( (string) $channel->link ),
-		'feed'     => $feed_url,
+		// The address the feed gives for itself (on the same site), so a moved feed is followed at its new address.
+		'feed'     => iar_feed_self_url( $channel, $feed_url ),
 		'count'    => (int) $ns->count,
 		'stories'  => iar_parse_feed_stories( $ns ),
 	);
@@ -151,6 +152,20 @@ function iar_parse_feed( $xml, $feed_url ) {
  * searched for the <link rel="alternate" … data-instapress-social> tag
  * (or data-insta-archive, from versions before 1.3.0).
  */
+/** A feed's own address (atom:link rel="self") when it's on the same site as where we fetched it; else where we fetched it. */
+function iar_feed_self_url( $channel, $fetched ) {
+	foreach ( $channel->children( 'http://www.w3.org/2005/Atom' )->link as $link ) {
+		$a = $link->attributes();
+		if ( 'self' === (string) $a['rel'] ) {
+			$self = iar_clean_url( (string) $a['href'] );
+			if ( $self && strtolower( (string) wp_parse_url( $self, PHP_URL_HOST ) ) === strtolower( (string) wp_parse_url( $fetched, PHP_URL_HOST ) ) ) {
+				return $self;
+			}
+		}
+	}
+	return $fetched;
+}
+
 function iar_resolve_feed( $url ) {
 	$url  = iar_clean_url( $url );
 	if ( ! $url ) {
@@ -319,7 +334,7 @@ function iar_render_following_page() {
 			<input type="hidden" name="action" value="iar_follow">
 			<label for="iar-feed" style="display:block;font-weight:600;margin-bottom:6px;"><?php esc_html_e( 'Follow someone', 'instapress-social' ); ?></label>
 			<div style="display:flex;gap:8px;">
-				<input type="url" id="iar-feed" name="feed" class="regular-text" style="flex:1;" required placeholder="https://their-site.com/feed/insta/">
+				<input type="url" id="iar-feed" name="feed" class="regular-text" style="flex:1;" required placeholder="https://their-site.com/social/feed/">
 				<?php submit_button( __( 'Follow', 'instapress-social' ), 'primary', 'submit', false ); ?>
 			</div>
 			<p class="description"><?php esc_html_e( 'Paste the link copied from the Follow button on their profile — or just their profile link.', 'instapress-social' ); ?></p>
