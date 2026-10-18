@@ -129,7 +129,7 @@
     Array.prototype.forEach.call(files, function (file) {
       var type = /^video\//.test(file.type) ? 'video' : (/^image\//.test(file.type) ? 'image' : '');
       if (!type) { skipped.push(file.name + ' (not a photo or video)'); return; }
-      if (MAX_UPLOAD && file.size > MAX_UPLOAD) { skipped.push(file.name + ' (' + fmtSize(file.size) + ' — this site accepts up to ' + fmtSize(MAX_UPLOAD) + ')'); return; }
+      if (type === 'video' && MAX_UPLOAD && file.size > MAX_UPLOAD) { skipped.push(file.name + ' (' + fmtSize(file.size) + ' — this site accepts up to ' + fmtSize(MAX_UPLOAD) + ')'); return; }
       if (state.kind === 'story') { state.items.forEach(function (it) { URL.revokeObjectURL(it.url); }); state.items = []; }
       if (state.items.length >= MAX_ITEMS) { skipped.push(file.name + ' (' + MAX_ITEMS + ' max)'); return; }
       state.items.push({ file: file, type: type, url: URL.createObjectURL(file), ratio: null });
@@ -191,6 +191,28 @@
   });
 
   /* ---------------- sharing ---------------- */
+  var MAX_EDGE = 2160; // px — twice Instagram's 1080, plenty for any screen
+
+  // Full-size camera photos (12–48 MP, sometimes HEIC) can be too heavy for the
+  // server to resize. Send a JPEG no bigger than MAX_EDGE instead, unless the
+  // original is already small. Animated GIFs and anything we can't decode go as they are.
+  async function shrinkImage(file) {
+    if (file.type === 'image/gif' || !window.createImageBitmap) return file;
+    var bmp;
+    try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { return file; }
+    var scale = Math.min(1, MAX_EDGE / Math.max(bmp.width, bmp.height));
+    var plainJpeg = /^image\/jpe?g$/.test(file.type);
+    if (scale === 1 && plainJpeg && file.size < 4 * 1048576) { bmp.close && bmp.close(); return file; }
+    var c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    bmp.close && bmp.close();
+    var blob = await new Promise(function (r) { c.toBlob(r, 'image/jpeg', 0.9); });
+    if (!blob) return file;
+    var name = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+    try { return new File([blob], name, { type: 'image/jpeg' }); } catch (e) { blob.name = name; return blob; }
+  }
+
   function posterFrame(url) {
     return new Promise(function (resolve) {
       var v = document.createElement('video');
@@ -211,7 +233,7 @@
     });
   }
 
-  function post(fields, onProgress) {
+  function post(fields, onProgress, what) {
     return new Promise(function (resolve, reject) {
       var fd = new FormData();
       fd.append('_ajax_nonce', NONCE);
@@ -229,7 +251,7 @@
         var res = null;
         try { res = JSON.parse(xhr.responseText); } catch (err) {}
         if (res && res.success) resolve(res.data);
-        else reject(new Error((res && res.data) || (xhr.status === 413 ? 'That file is too big for this site.' : 'Upload failed (HTTP ' + xhr.status + ').')));
+        else reject(new Error((res && res.data) || (xhr.status === 413 ? 'That file is too big for this site.' : (what || 'Upload') + ' failed (HTTP ' + xhr.status + ').')));
       };
       xhr.onerror = function () { reject(new Error('Network error — check your connection and try again.')); };
       xhr.send(fd);
@@ -254,11 +276,13 @@
         var it = items[i];
         var label = items.length > 1 ? 'Uploading ' + (i + 1) + ' of ' + items.length + '…' : 'Uploading…';
         var poster = it.type === 'video' ? await posterFrame(it.url) : null;
-        var up = await post({ action: 'iar_compose_upload', file: { blob: it.file, name: it.file.name || ('upload.' + (it.type === 'video' ? 'mp4' : 'jpg')) } }, function (f) {
+        var file = it.type === 'image' ? await shrinkImage(it.file) : it.file;
+        if (MAX_UPLOAD && file.size > MAX_UPLOAD) throw new Error((it.file.name || 'A file') + ' is ' + fmtSize(file.size) + ' — this site accepts up to ' + fmtSize(MAX_UPLOAD) + '.');
+        var up = await post({ action: 'iar_compose_upload', file: { blob: file, name: file.name || ('upload.' + (it.type === 'video' ? 'mp4' : 'jpg')) } }, function (f) {
           progress(label, (done + f * it.file.size) / total * 0.95);
-        });
+        }, 'Uploading ' + (it.file.name || 'a file'));
         if (poster) {
-          await post({ action: 'iar_compose_upload', poster_for: up.id, file: { blob: poster, name: 'poster.jpg' } });
+          await post({ action: 'iar_compose_upload', poster_for: up.id, file: { blob: poster, name: 'poster.jpg' } }, null, 'Saving the video poster');
         }
         ids.push(up.id);
         done += it.file.size;
@@ -274,7 +298,7 @@
         fields.story_text = root.querySelector('[name="story_text"]').value;
         fields.story_link = root.querySelector('[name="story_link"]').value;
       }
-      var res = await post(fields);
+      var res = await post(fields, null, 'Publishing');
       progress('Shared!', 1);
       state.done = true;
       location.href = res.redirect;

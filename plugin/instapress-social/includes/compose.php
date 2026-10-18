@@ -69,7 +69,29 @@ function iar_compose_guard() {
 	require_once ABSPATH . 'wp-admin/includes/file.php';
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 	require_once ABSPATH . 'wp-admin/includes/image.php';
+	// Resizing phone photos and reading videos can need more than a normal request.
+	wp_raise_memory_limit( 'image' );
+	if ( function_exists( 'set_time_limit' ) ) {
+		@set_time_limit( 300 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- may be disabled by the host
+	}
 }
+
+// If PHP dies during a composer request, say why (as JSON the composer can show)
+// instead of WordPress's generic "critical error" page. Only people who can post get here.
+add_filter( 'wp_php_error_message', function ( $message, $error ) {
+	$action = isset( $_REQUEST['action'] ) ? sanitize_key( $_REQUEST['action'] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+	if ( ! wp_doing_ajax() || ! in_array( $action, array( 'iar_compose_upload', 'iar_compose_publish' ), true ) || ! iar_can_compose() ) {
+		return $message;
+	}
+	// First line only, without the stack trace or server paths.
+	$what = preg_replace( '/ in \/.*$/', '', strtok( wp_strip_all_tags( (string) ( $error['message'] ?? '' ) ), "\n" ) );
+	$where = isset( $error['file'] ) ? ' (' . basename( $error['file'] ) . ':' . (int) ( $error['line'] ?? 0 ) . ')' : '';
+	return wp_json_encode( array(
+		'success' => false,
+		/* translators: %s: PHP error message */
+		'data'    => sprintf( __( 'The server hit an error: %s', 'instapress-social' ), $what . $where ),
+	) );
+}, 10, 2 );
 
 /** An attachment this user uploaded through the composer (and not yet used). */
 function iar_compose_own_attachment( $id ) {

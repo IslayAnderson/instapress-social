@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.16.0
+Stable tag: 1.17.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -48,6 +48,11 @@ Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use
 When the plugin is set up (activated, or first run after updating), it sends one "plugin_setup" event to the plugin author's Google Analytics, so they know roughly how many sites use it. To send it, the plugin first reads the Analytics details from blog.islayanderson.co.uk (a plain request; nothing about your site is included). It contains the site's domain, the plugin and WordPress versions and the environment type (production, staging, local) — nothing about your visitors, posts or users. To turn it off, add `define( 'IAR_DISABLE_SETUP_EVENT', true );` to wp-config.php, or return false from the `iar_send_setup_event` filter.
 
 == Changelog ==
+
+= 1.17.0 =
+* Posting from the phone composer is more reliable: photos are resized in the browser (to at most 2160 px, as JPEG) before uploading, so full-size camera photos no longer overload the server. A 5000 px photo goes up as about a quarter of the size.
+* If the server still fails, the composer now says what went wrong and at which step (uploading, saving the video poster or publishing) instead of just "HTTP 500".
+* Uploads from the composer get more memory and time on the server.
 
 = 1.16.0 =
 * Faster profile grid. The first row of tiles loads straight away (the first with high priority) instead of waiting as "lazy" images, so the page's main image appears sooner.
