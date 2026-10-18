@@ -44,7 +44,7 @@ $long    = mb_strlen( $caption ) > 125 || substr_count( $caption, "\n" ) > 1;
 						<?php if ( 'text' === $m['type'] && $own && ! empty( $item['post_id'] ) ) : ?>
 							<?php echo iar_text_svg( (int) $item['post_id'], 'full' ); // phpcs:ignore -- built from escaped/sanitised parts ?>
 						<?php elseif ( 'video' === $m['type'] ) : ?>
-							<video src="<?php echo esc_url( $m['src'] ); ?>"<?php echo ! empty( $m['poster'] ) ? ' poster="' . esc_url( $m['poster'] ) . '"' : ''; ?> controls playsinline preload="metadata"></video>
+							<?php echo iar_video_tag( $m ); // phpcs:ignore -- escaped inside ?>
 						<?php else : ?>
 							<img src="<?php echo esc_url( $m['src'] ); ?>" alt="" loading="lazy"<?php echo ! empty( $m['width'] ) ? ' width="' . (int) $m['width'] . '" height="' . (int) $m['height'] . '"' : ''; ?>>
 						<?php endif; ?>

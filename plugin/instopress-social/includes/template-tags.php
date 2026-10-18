@@ -274,6 +274,20 @@ function iar_media_ratio( $attachment_id ) {
 }
 
 /**
+ * A carousel video that downloads nothing until it's needed. With a poster, the
+ * poster shows and the video is fetched on play. Without one, the src waits in
+ * data-src until the slide is near the screen, then just enough loads to show a
+ * frame (assets/js/app.js).
+ */
+function iar_video_tag( $m ) {
+	$src = esc_url( $m['src'] );
+	if ( ! empty( $m['poster'] ) ) {
+		return '<video src="' . $src . '" poster="' . esc_url( $m['poster'] ) . '" controls playsinline preload="none"></video>';
+	}
+	return '<video data-src="' . $src . '#t=0.5" controls playsinline preload="none"></video>';
+}
+
+/**
  * The frame ratio for a post (width / height):
  * the chosen ratio, or — for Auto — the first item's ratio clamped to
  * 4:5…1.91:1 (videos may go down to 9:16). Original skips the clamp.

@@ -33,7 +33,7 @@ while ( have_posts() ) :
 									<?php if ( 'text' === $m['type'] ) : ?>
 										<?php echo iar_text_svg( get_the_ID(), 'full' ); // phpcs:ignore -- built from escaped/sanitised parts ?>
 									<?php elseif ( 'video' === $m['type'] ) : ?>
-										<video src="<?php echo esc_url( $m['src'] ); ?>"<?php echo $m['poster'] ? ' poster="' . esc_url( $m['poster'] ) . '"' : ''; ?> controls playsinline preload="metadata"></video>
+										<?php echo iar_video_tag( $m ); // phpcs:ignore -- escaped inside ?>
 									<?php else : ?>
 										<?php echo wp_get_attachment_image( $m['id'], 'large', false, array( 'alt' => '' ) ); ?>
 									<?php endif; ?>

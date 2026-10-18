@@ -106,29 +106,30 @@
   });
 
   /* ----------------------------------------------------------------------
-     Grid videos without a poster: only fetch a frame once the tile is near
-     the screen, so they don't hold up the images above them.
+     Videos without a poster (grid tiles, feed and post carousels): only
+     fetch a frame once they're near the screen, so they don't hold up the
+     images above them. Markup: grid-item.php, iar_video_tag().
      ---------------------------------------------------------------------- */
   var videoObserver = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) {
       if (!entry.isIntersecting) return;
-      showGridVideo(entry.target);
+      showVideo(entry.target);
       videoObserver.unobserve(entry.target);
     });
   }, { rootMargin: '200px 0px' }) : null;
 
-  function showGridVideo(v) {
+  function showVideo(v) {
     v.preload = 'metadata';
     v.src = v.dataset.src;
     v.removeAttribute('data-src');
   }
 
-  function watchGridVideos(root) {
-    root.querySelectorAll('video.grid__video[data-src]').forEach(function (v) {
-      if (videoObserver) videoObserver.observe(v); else showGridVideo(v);
+  function watchVideos(root) {
+    root.querySelectorAll('video[data-src]').forEach(function (v) {
+      if (videoObserver) videoObserver.observe(v); else showVideo(v);
     });
   }
-  watchGridVideos(document);
+  watchVideos(document);
 
   /* ----------------------------------------------------------------------
      Post menu (the ⋯ button, for people who can edit the post):
@@ -210,7 +211,7 @@
         doc.querySelectorAll(btn.dataset.items || '[data-grid] .grid__item').forEach(function (el) {
           var node = document.importNode(el, true);
           target.appendChild(node);
-          watchGridVideos(node);
+          watchVideos(node);
           node.querySelectorAll('.carousel').forEach(initCarousel);
         });
         var next = doc.querySelector('[data-load-more]');

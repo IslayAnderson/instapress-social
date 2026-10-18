@@ -4,7 +4,7 @@ Tags: instopress-social, archive, gallery, import, social
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.30.0
+Stable tag: 1.31.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -70,6 +70,9 @@ Turn it on or off under Settings → instopress-social → Privacy ("Share anony
 * GitHub — instopress-social Pro checks https://api.github.com/repos/IslayAnderson/instopress-social/releases/latest for updates and downloads them from GitHub. Terms: https://docs.github.com/site-policy/github-terms/github-terms-of-service — Privacy policy: https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement (Pro)
 
 == Changelog ==
+
+= 1.31.0 =
+* Videos in home feed cards and on post pages no longer download anything when the page loads. Videos with a poster show it and load only when played; videos without one load a single frame once they scroll near the screen, as grid tiles already did.
 
 = 1.30.0 =
 * The plugin's stylesheet is now inlined in the page's <head> on instopress pages instead of loaded as a separate file, so nothing holds up the first paint (it styles the whole page there, so deferring it would flash an unstyled page). It adds about 7 KB to each page after compression. Return false from the iar_inline_styles filter to link the file instead.
