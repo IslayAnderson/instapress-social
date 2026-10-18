@@ -20,6 +20,17 @@ function iar_update_repo() {
 	return (string) apply_filters( 'iar_update_repo', IAR_UPDATE_REPO );
 }
 
+/** A release download from this repository, under its old or new name (it was renamed to instopress-social). */
+function iar_update_url_is_ours( $url ) {
+	$owner = strtok( iar_update_repo(), '/' );
+	foreach ( array( iar_update_repo(), $owner . '/instopress-social', $owner . '/instapress-social' ) as $repo ) {
+		if ( 0 === strpos( $url, 'https://github.com/' . $repo . '/releases/download/' ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
 /**
  * Latest release as { version, package, url, notes, published }, or null.
  * Cached for 6 hours (1 hour after a failure) to stay well inside GitHub's
@@ -45,9 +56,9 @@ function iar_latest_release( $force = false ) {
 		foreach ( (array) ( $data['assets'] ?? array() ) as $asset ) {
 			$name = (string) ( $asset['name'] ?? '' );
 			$url  = (string) ( $asset['browser_download_url'] ?? '' );
-			// Only this repo's own release download, named like instapress-social-1.2.3.zip.
-			if ( preg_match( '/^instapress-social-[\d.]+\.zip$/', $name )
-				&& 0 === strpos( $url, 'https://github.com/' . $repo . '/releases/download/' ) ) {
+			// Only this repo's own release download, named like instopress-social-1.2.3.zip (or,
+			// before the rename, instapress-social-…). The repo itself may answer under either name.
+			if ( preg_match( '/^inst[ao]press-social-[\d.]+\.zip$/', $name ) && iar_update_url_is_ours( $url ) ) {
 				$package = $url;
 				break;
 			}
@@ -154,13 +165,54 @@ add_filter( 'upgrader_source_selection', function ( $source, $remote_source, $up
 	if ( empty( $extra['plugin'] ) || plugin_basename( IAR_FILE ) !== $extra['plugin'] ) {
 		return $source;
 	}
-	$want = trailingslashit( $remote_source ) . dirname( plugin_basename( IAR_FILE ) ) . '/';
+	// The renamed plugin (instopress-social.php) goes in its own instopress-social/ folder;
+	// iar_follow_renamed_plugin() then points WordPress at it.
+	$folder = is_file( trailingslashit( $source ) . 'instopress-social.php' ) ? 'instopress-social' : dirname( plugin_basename( IAR_FILE ) );
+	$want   = trailingslashit( $remote_source ) . $folder . '/';
 	if ( untrailingslashit( $source ) === untrailingslashit( $want ) ) {
 		return $source;
 	}
 	global $wp_filesystem;
 	return $wp_filesystem && $wp_filesystem->move( $source, $want ) ? $want : $source;
 }, 10, 4 );
+
+/**
+ * The plugin was renamed (instapress-social → instopress-social, with a new folder and
+ * main file). WordPress removes the old folder when updating; keep it active, network-
+ * active and auto-updating under its new name instead of finding it "missing".
+ */
+function iar_follow_renamed_plugin( $old, $new ) {
+	$swap = function ( $list ) use ( $old, $new ) {
+		$list = array_values( array_unique( array_map( function ( $p ) use ( $old, $new ) {
+			return $p === $old ? $new : $p;
+		}, (array) $list ) ) );
+		return $list;
+	};
+	update_option( 'active_plugins', $swap( get_option( 'active_plugins', array() ) ) );
+	update_site_option( 'auto_update_plugins', $swap( get_site_option( 'auto_update_plugins', array() ) ) );
+	if ( is_multisite() ) {
+		$network = (array) get_site_option( 'active_sitewide_plugins', array() );
+		if ( isset( $network[ $old ] ) ) {
+			$network[ $new ] = $network[ $old ];
+			unset( $network[ $old ] );
+			update_site_option( 'active_sitewide_plugins', $network );
+		}
+	}
+}
+
+add_filter( 'upgrader_post_install', function ( $response, $extra, $result ) {
+	if ( empty( $extra['plugin'] ) || plugin_basename( IAR_FILE ) !== $extra['plugin'] || is_wp_error( $response ) ) {
+		return $response;
+	}
+	$folder = (string) ( $result['destination_name'] ?? '' );
+	if ( $folder && is_file( WP_PLUGIN_DIR . '/' . $folder . '/instopress-social.php' ) ) {
+		$new = $folder . '/instopress-social.php';
+		if ( $new !== $extra['plugin'] ) {
+			iar_follow_renamed_plugin( $extra['plugin'], $new );
+		}
+	}
+	return $response;
+}, 10, 3 );
 
 // Forget the cached release after this plugin updates, so the next check is fresh.
 add_action( 'upgrader_process_complete', function ( $upgrader, $extra ) {

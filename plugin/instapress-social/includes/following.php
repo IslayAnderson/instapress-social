@@ -133,7 +133,14 @@ function iar_parse_feed( $xml, $feed_url ) {
 
 	$channel = $doc->channel;
 	// Sites still on a pre-1.3.0 version publish under the old namespace.
-	$uri     = in_array( IAR_OLD_NS, $doc->getDocNamespaces( true ), true ) && ! in_array( IAR_NS, $doc->getDocNamespaces( true ), true ) ? IAR_OLD_NS : IAR_NS;
+	// The namespace a feed uses: the renamed plugin's (instopress-social), this one, or pre-1.3.0's.
+	$uri     = IAR_NS;
+	foreach ( array( 'urn:instopress-social:1', IAR_NS, IAR_OLD_NS ) as $candidate ) {
+		if ( in_array( $candidate, $doc->getDocNamespaces( true ), true ) ) {
+			$uri = $candidate;
+			break;
+		}
+	}
 	$ns      = $channel->children( $uri );
 	if ( ! isset( $ns->username ) || '' === trim( (string) $ns->username ) ) {
 		return new WP_Error( 'iar_not_insta', __( 'That feed isn\'t from an instapress-social site.', 'instapress-social' ) );
@@ -224,7 +231,7 @@ function iar_resolve_feed( $url ) {
 	}
 	if ( preg_match_all( '/<link\b[^>]*>/i', $body, $tags ) ) {
 		foreach ( $tags[0] as $tag ) {
-			if ( preg_match( '/data-(instapress-social|insta-archive)\b/i', $tag ) && preg_match( '/href=["\']([^"\']+)["\']/i', $tag, $m ) ) {
+			if ( preg_match( '/data-(instopress-social|instapress-social|insta-archive)\b/i', $tag ) && preg_match( '/href=["\']([^"\']+)["\']/i', $tag, $m ) ) {
 				$feed = iar_clean_url( html_entity_decode( $m[1] ) );
 				$xml  = $feed ? iar_http_get( $feed ) : new WP_Error( 'iar_url', '' );
 				return is_wp_error( $xml ) ? $xml : array( $feed, $xml );

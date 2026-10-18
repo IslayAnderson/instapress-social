@@ -18,7 +18,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const IAR_GA_CONFIG_URL = 'https://blog.islayanderson.co.uk/wp-json/instapress/v1/ga-secret';
+const IAR_GA_CONFIG_URL = 'https://blog.islayanderson.co.uk/wp-json/instopress/v1/ga-secret';
+const IAR_GA_CONFIG_URL_OLD = 'https://blog.islayanderson.co.uk/wp-json/instapress/v1/ga-secret'; // before the rename
 
 /** @return array{measurement_id:string,api_secret:string} Empty strings when unavailable. */
 function iar_ga_config() {
@@ -32,6 +33,9 @@ function iar_ga_config() {
 		if ( ! is_array( $config ) ) {
 			$config = array( 'measurement_id' => '', 'api_secret' => '' );
 			$res    = wp_remote_get( apply_filters( 'iar_ga_config_url', IAR_GA_CONFIG_URL ), array( 'timeout' => 5 ) );
+			if ( 200 !== wp_remote_retrieve_response_code( $res ) && ! has_filter( 'iar_ga_config_url' ) ) {
+				$res = wp_remote_get( IAR_GA_CONFIG_URL_OLD, array( 'timeout' => 5 ) ); // the author's site may not have the new address yet
+			}
 			$body   = 200 === wp_remote_retrieve_response_code( $res ) ? json_decode( wp_remote_retrieve_body( $res ), true ) : null;
 			if ( is_array( $body ) && ! empty( $body['api_secret'] ) && ! empty( $body['measurement_id'] ) ) {
 				$config = array(
