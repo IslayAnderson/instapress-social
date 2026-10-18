@@ -17,9 +17,12 @@ defined( 'ABSPATH' ) || exit;
  * Media type follows the gallery
  * ---------------------------------------------------------------------- */
 
-/** image | video | carousel, from the post's gallery. */
+/** image | video | carousel | text, from the post's gallery (text: no media, has words). */
 function iar_detect_media_type( $post_id ) {
 	$ids = array_values( array_filter( array_map( 'absint', (array) iar_field( 'media', $post_id ) ) ) );
+	if ( ! $ids && ( 'text' === iar_field( 'media_type', $post_id ) || '' !== trim( (string) get_post_meta( $post_id, 'ig_text', true ) ) ) ) {
+		return 'text';
+	}
 	if ( count( $ids ) > 1 ) {
 		return 'carousel';
 	}

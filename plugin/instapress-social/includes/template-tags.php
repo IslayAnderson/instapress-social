@@ -102,6 +102,11 @@ function iar_video_poster_id( $video_id, $post_id = 0, $only_item = false ) {
  */
 function iar_get_media( $post_id = null ) {
 	$post_id = $post_id ?: get_the_ID();
+	if ( function_exists( 'iar_is_text_post' ) && iar_is_text_post( $post_id ) ) {
+		// A text post's one "slide" is its card (includes/text-posts.php).
+		$url = iar_text_svg_url( $post_id );
+		return array( array( 'id' => 0, 'type' => 'text', 'src' => $url, 'thumb' => $url, 'poster' => '' ) );
+	}
 	$ids     = array_values( array_filter( array_map( 'absint', (array) iar_field( 'media', $post_id ) ) ) );
 	$out     = array();
 
@@ -214,7 +219,11 @@ function iar_grid_ratio() {
 /** Caption text, falling back to the title. */
 function iar_get_caption( $post_id = null ) {
 	$caption = (string) iar_field( 'caption', $post_id );
-	return '' !== trim( $caption ) ? $caption : get_the_title( $post_id );
+	if ( '' !== trim( $caption ) ) {
+		return $caption;
+	}
+	// A text post's title is its own words, already on the card.
+	return function_exists( 'iar_is_text_post' ) && iar_is_text_post( $post_id ?: get_the_ID() ) ? '' : get_the_title( $post_id );
 }
 
 /** Profile URL for a username you know (yourself or someone you follow), keyed lowercase. */

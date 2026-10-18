@@ -143,9 +143,16 @@ add_action( 'wp_ajax_iar_compose_upload', function () {
 add_action( 'wp_ajax_iar_compose_publish', function () {
 	iar_compose_guard();
 	// phpcs:disable WordPress.Security.NonceVerification -- checked in the guard
-	$kind  = 'story' === ( $_POST['kind'] ?? '' ) ? 'story' : 'post';
+	$kind  = in_array( $_POST['kind'] ?? '', array( 'story', 'text' ), true ) ? $_POST['kind'] : 'post';
 	$media = array_values( array_unique( array_filter( array_map( 'absint', (array) ( $_POST['media'] ?? array() ) ) ) ) );
 	// phpcs:enable
+	if ( 'text' === $kind ) {
+		$post_id = iar_compose_create_text_post();
+		if ( is_wp_error( $post_id ) ) {
+			wp_send_json_error( $post_id->get_error_message() );
+		}
+		wp_send_json_success( array( 'id' => $post_id, 'redirect' => get_permalink( $post_id ) ) );
+	}
 	if ( ! $media ) {
 		wp_send_json_error( __( 'Add at least one photo or video.', 'instapress-social' ) );
 	}
@@ -222,6 +229,50 @@ function iar_compose_create_post( $media ) {
 			break;
 		}
 	}
+	return $post_id;
+}
+
+/** A text post: words and their look, no media (includes/text-posts.php). */
+function iar_compose_create_text_post() {
+	// phpcs:disable WordPress.Security.NonceVerification -- checked in the guard
+	$html  = iar_text_sanitize( wp_unslash( $_POST['text_html'] ?? '' ) );
+	$style = array();
+	foreach ( array( 'scale', 'font', 'align', 'color', 'bg', 'bg_color' ) as $k ) {
+		$style[ $k ] = sanitize_text_field( wp_unslash( $_POST[ 'text_' . $k ] ?? '' ) );
+	}
+	$caption  = sanitize_textarea_field( wp_unslash( $_POST['caption'] ?? '' ) );
+	$location = sanitize_text_field( wp_unslash( $_POST['location'] ?? '' ) );
+	$ratio    = sanitize_text_field( wp_unslash( $_POST['ratio'] ?? 'auto' ) );
+	// phpcs:enable
+	$plain = trim( wp_strip_all_tags( str_replace( array( '</p>', '<br/>', '</li>', '</h2>' ), "\n", $html ) ) );
+	if ( '' === $plain ) {
+		return new WP_Error( 'iar_empty', __( 'Write something first.', 'instapress-social' ) );
+	}
+	if ( ! array_key_exists( $ratio, iar_ratios() ) || 'original' === $ratio ) {
+		$ratio = 'auto';
+	}
+
+	$code    = iar_unique_shortcode();
+	$post_id = wp_insert_post( array(
+		'post_type'      => IAR_POST_TYPE,
+		'post_status'    => 'publish',
+		'post_title'     => class_exists( 'IAR_Importer' ) ? IAR_Importer::title( $caption ?: html_entity_decode( $plain, ENT_QUOTES, 'UTF-8' ), $code ) : $code,
+		'post_name'      => $code,
+		'comment_status' => iar_comments_enabled() ? 'open' : 'closed',
+	), true );
+	if ( is_wp_error( $post_id ) ) {
+		return $post_id;
+	}
+	$f = IAR_FIELDS;
+	update_post_meta( $post_id, $f['shortcode'], $code );
+	update_post_meta( $post_id, $f['caption'], $caption );
+	update_post_meta( $post_id, $f['ratio'], $ratio );
+	update_post_meta( $post_id, $f['location'], $location );
+	update_post_meta( $post_id, $f['posted_at'], current_time( 'mysql' ) );
+	foreach ( array( 'shortcode', 'caption', 'ratio', 'location', 'posted_at' ) as $k ) {
+		update_post_meta( $post_id, '_' . $f[ $k ], 'field_' . $f[ $k ] );
+	}
+	iar_text_save( $post_id, $html, $style );
 	return $post_id;
 }
 

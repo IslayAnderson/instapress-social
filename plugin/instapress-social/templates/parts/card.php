@@ -28,7 +28,12 @@ $long    = mb_strlen( $caption ) > 125 || substr_count( $caption, "\n" ) > 1;
 				<span class="post__location"><?php echo esc_html( $item['location'] ); ?></span>
 			<?php endif; ?>
 		</div>
-		<a class="post__more icon-btn" href="<?php echo esc_url( $item['url'] ); ?>" aria-label="<?php esc_attr_e( 'Open post', 'instapress-social' ); ?>"><?php echo iar_icon( 'more' ); // phpcs:ignore ?></a>
+		<?php
+		iar_template_part( 'post-menu', array(
+			'post_id'  => $own ? (int) ( $item['post_id'] ?? 0 ) : 0,
+			'fallback' => $item['url'],
+		) );
+		?>
 	</header>
 
 	<div class="card__media" style="--ar: <?php echo esc_attr( (float) $item['ratio'] ?: 1 ); ?>">
@@ -36,7 +41,9 @@ $long    = mb_strlen( $caption ) > 125 || substr_count( $caption, "\n" ) > 1;
 			<div class="carousel__track">
 				<?php foreach ( $media as $m ) : ?>
 					<div class="carousel__slide">
-						<?php if ( 'video' === $m['type'] ) : ?>
+						<?php if ( 'text' === $m['type'] && $own && ! empty( $item['post_id'] ) ) : ?>
+							<?php echo iar_text_svg( (int) $item['post_id'], 'full' ); // phpcs:ignore -- built from escaped/sanitised parts ?>
+						<?php elseif ( 'video' === $m['type'] ) : ?>
 							<video src="<?php echo esc_url( $m['src'] ); ?>"<?php echo ! empty( $m['poster'] ) ? ' poster="' . esc_url( $m['poster'] ) . '"' : ''; ?> controls playsinline preload="metadata"></video>
 						<?php else : ?>
 							<img src="<?php echo esc_url( $m['src'] ); ?>" alt="" loading="lazy"<?php echo ! empty( $m['width'] ) ? ' width="' . (int) $m['width'] . '" height="' . (int) $m['height'] . '"' : ''; ?>>

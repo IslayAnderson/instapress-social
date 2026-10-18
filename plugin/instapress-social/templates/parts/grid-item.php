@@ -25,7 +25,9 @@ $index = isset( $args['index'] ) ? (int) $args['index'] : 99;
 $eager = $index < 6;
 ?>
 <a class="grid__item" href="<?php the_permalink(); ?>">
-	<?php if ( $thumb ) : ?>
+	<?php if ( 'text' === $first['type'] ) : ?>
+		<?php echo iar_text_svg( get_the_ID(), 'tile' ); // phpcs:ignore -- built from escaped/sanitised parts ?>
+	<?php elseif ( $thumb ) : ?>
 		<img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( wp_html_excerpt( $caption, 100, '…' ) ); ?>" <?php echo $eager ? ( 0 === $index ? 'fetchpriority="high"' : 'loading="eager"' ) : 'loading="lazy"'; ?> decoding="async">
 	<?php else : ?>
 		<?php // No poster yet: show a frame of the video, fetched only once the tile scrolls into view (assets/js/app.js). ?>
@@ -35,6 +37,10 @@ $eager = $index < 6;
 		<span class="grid__badge" aria-label="<?php esc_attr_e( 'Carousel', 'instapress-social' ); ?>"><?php echo iar_icon( 'carousel' ); // phpcs:ignore ?></span>
 	<?php elseif ( 'video' === $first['type'] ) : ?>
 		<span class="grid__badge" aria-label="<?php esc_attr_e( 'Video', 'instapress-social' ); ?>"><?php echo iar_icon( 'reels' ); // phpcs:ignore ?></span>
+	<?php endif; ?>
+	<?php $badge = iar_status_badge( get_post_status() ); ?>
+	<?php if ( $badge ) : ?>
+		<span class="grid__status"><?php echo esc_html( $badge ); ?></span>
 	<?php endif; ?>
 	<span class="grid__overlay">
 		<span><?php echo iar_icon( 'heart-filled' ); // phpcs:ignore ?> <?php echo esc_html( iar_count( $likes ) ); ?></span>

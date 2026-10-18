@@ -21,6 +21,8 @@ import/                      your posts.json + downloaded media (git-ignored)
 - **Likes & comments** on WordPress's own comment system: comment panel with replies (Discussion settings, moderation and Akismet apply), likes for visitors without accounts, double-tap to like.
 - **Bot protection** (optional): Cloudflare Turnstile, Google reCAPTCHA v3 or reCAPTCHA v2 (invisible) on comments and likes, verified server-side; choose and add keys under *Settings → instapress-social*.
 - **Mobile posting** at `/gram/new/` (the **+** in the bottom bar): pick photos/videos, reorder, choose the shape, caption and share as a post or a story — no wp-admin needed. Logged-in authors only.
+- **Text posts**: rich text on a coloured or gradient card (size, font, alignment, colours), drawn as SVG with real text. Compose them in the **Text** tab at `/gram/new/` or in wp-admin.
+- **Post menu**: logged in, the ⋯ on a post changes who can see it (Published / Private / Draft), bins it, or opens the editor.
 - **Stories**: photos/videos that disappear after 24h, played full-screen from your profile picture and the home feed's stories row; followers get them through the same feed.
 - **Get instapress-social**: a profile button that downloads the plugin version installed on the site (`/?download=instapress-social`).
 - **Settings → instapress-social**: profile picture, username, bio, website, counts, grid, templates, sharing.

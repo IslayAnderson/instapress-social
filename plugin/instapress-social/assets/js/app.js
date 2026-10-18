@@ -131,6 +131,68 @@
   watchGridVideos(document);
 
   /* ----------------------------------------------------------------------
+     Post menu (the ⋯ button, for people who can edit the post):
+     status — Published / Private / Draft — and Move to bin.
+     Markup: templates/parts/post-menu.php; endpoint: iar_set_status.
+     ---------------------------------------------------------------------- */
+  function closeMenus(except) {
+    document.querySelectorAll('[data-post-menu]').forEach(function (m) {
+      if (m === except) return;
+      m.querySelector('.post-menu__panel').hidden = true;
+      m.querySelector('[data-post-menu-toggle]').setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var toggle = e.target.closest('[data-post-menu-toggle]');
+    if (toggle) {
+      var menu = toggle.closest('[data-post-menu]'), panel = menu.querySelector('.post-menu__panel');
+      closeMenus(menu);
+      panel.hidden = !panel.hidden;
+      toggle.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+      if (!panel.hidden) { var first = panel.querySelector('[aria-checked="true"]') || panel.querySelector('button, a'); if (first) first.focus(); }
+      return;
+    }
+    var choice = e.target.closest('[data-set-status]');
+    if (choice) { setStatus(choice); return; }
+    if (!e.target.closest('.post-menu__panel')) closeMenus();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var open = document.querySelector('[data-post-menu] .post-menu__panel:not([hidden])');
+    if (!open) return;
+    var menu = open.closest('[data-post-menu]');
+    closeMenus();
+    menu.querySelector('[data-post-menu-toggle]').focus();
+  });
+
+  function setStatus(btn) {
+    var menu = btn.closest('[data-post-menu]'), status = btn.dataset.setStatus;
+    if (btn.getAttribute('aria-checked') === 'true') return;
+    if (btn.dataset.confirm && !window.confirm(btn.dataset.confirm)) return;
+    var err = menu.querySelector('[data-post-menu-error]');
+    var body = new FormData();
+    body.append('action', 'iar_set_status');
+    body.append('_ajax_nonce', menu.dataset.nonce);
+    body.append('post_id', menu.dataset.postId);
+    body.append('status', status);
+    menu.setAttribute('aria-busy', 'true');
+    fetch(CFG.ajax, { method: 'POST', body: body, credentials: 'same-origin' })
+      .then(function (r) { return r.json().catch(function () { return { success: false, data: 'Something went wrong (HTTP ' + r.status + ').' }; }); })
+      .then(function (res) {
+        menu.removeAttribute('aria-busy');
+        if (!res.success) { err.textContent = res.data || 'Something went wrong.'; err.hidden = false; return; }
+        err.hidden = true;
+        if (res.data.redirect) { location.href = res.data.redirect; return; }
+        menu.querySelectorAll('[role="menuitemradio"]').forEach(function (b) { b.setAttribute('aria-checked', b.dataset.setStatus === res.data.status ? 'true' : 'false'); });
+        var scope = menu.closest('.post, .card') || document;
+        scope.querySelectorAll('[data-post-status-badge]').forEach(function (b) { b.textContent = res.data.badge || ''; b.hidden = !res.data.badge; });
+        closeMenus();
+      })
+      .catch(function () { menu.removeAttribute('aria-busy'); err.textContent = 'Network error — try again.'; err.hidden = false; });
+  }
+
+  /* ----------------------------------------------------------------------
      Load more
      ---------------------------------------------------------------------- */
   document.addEventListener('click', function (e) {

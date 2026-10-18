@@ -100,7 +100,9 @@ function iar_post_to_item( $post ) {
 	$post  = get_post( $post );
 	$media = array();
 	foreach ( iar_get_media( $post->ID ) as $m ) {
-		$meta    = wp_get_attachment_metadata( $m['id'] );
+		$meta = 'text' === $m['type']
+			? array( 'width' => 1080, 'height' => (int) round( 1080 / iar_aspect_ratio( $post->ID ) ) )
+			: wp_get_attachment_metadata( $m['id'] );
 		$media[] = array_filter( array(
 			'type'   => $m['type'],
 			'src'    => $m['src'],
@@ -114,6 +116,7 @@ function iar_post_to_item( $post ) {
 		'url'      => get_permalink( $post ),
 		'date'     => get_post_time( 'c', true, $post ),
 		'caption'  => iar_get_caption( $post->ID ),
+		'text'     => iar_is_text_post( $post->ID ) ? iar_text_plain( $post->ID ) : '',
 		'ratio'    => iar_aspect_ratio( $post->ID ),
 		'type'     => (string) iar_field( 'media_type', $post->ID ) ?: ( count( $media ) > 1 ? 'carousel' : 'image' ),
 		'likes'    => iar_like_total( $post->ID ),
@@ -166,11 +169,11 @@ function iar_render_feed() {
 <?php iar_feed_story_elements(); ?>
 <?php foreach ( $posts as $post ) : $item = iar_post_to_item( $post ); ?>
 	<item>
-		<title><?php echo $x( wp_html_excerpt( $item['caption'], 100, '…' ) ); ?></title>
+		<title><?php echo $x( wp_html_excerpt( $item['caption'] ?: $item['text'], 100, '…' ) ); ?></title>
 		<link><?php echo $x( $item['url'] ); ?></link>
 		<guid isPermaLink="true"><?php echo $x( $item['url'] ); ?></guid>
 		<pubDate><?php echo $x( get_post_time( 'r', true, $post ) ); ?></pubDate>
-		<description><?php echo $x( $item['caption'] ); ?></description>
+		<description><?php echo $x( trim( $item['text'] . ( $item['text'] && $item['caption'] ? "\n\n" : '' ) . $item['caption'] ) ); ?></description>
 		<insta:type><?php echo $x( $item['type'] ); ?></insta:type>
 		<insta:ratio><?php echo $x( $item['ratio'] ); ?></insta:ratio>
 		<insta:likes><?php echo (int) $item['likes']; ?></insta:likes>
@@ -179,7 +182,7 @@ function iar_render_feed() {
 		<insta:location><?php echo $x( $item['location'] ); ?></insta:location>
 <?php endif; ?>
 <?php foreach ( $item['media'] as $m ) : ?>
-		<media:content url="<?php echo $x( $m['src'] ); ?>" medium="<?php echo 'video' === $m['type'] ? 'video' : 'image'; ?>"<?php echo ! empty( $m['width'] ) ? ' width="' . (int) $m['width'] . '" height="' . (int) $m['height'] . '"' : ''; ?><?php echo empty( $m['poster'] ) ? ' />' : '><media:thumbnail url="' . $x( $m['poster'] ) . '" /></media:content>'; ?>
+		<media:content url="<?php echo $x( $m['src'] ); ?>" medium="<?php echo 'video' === $m['type'] ? 'video' : 'image'; ?>"<?php echo 'text' === $m['type'] ? ' type="image/svg+xml"' : ''; ?><?php echo ! empty( $m['width'] ) ? ' width="' . (int) $m['width'] . '" height="' . (int) $m['height'] . '"' : ''; ?><?php echo empty( $m['poster'] ) ? ' />' : '><media:thumbnail url="' . $x( $m['poster'] ) . '" /></media:content>'; ?>
 
 <?php endforeach; ?>
 	</item>

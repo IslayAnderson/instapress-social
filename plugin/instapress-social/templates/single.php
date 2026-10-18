@@ -30,7 +30,9 @@ while ( have_posts() ) :
 						<div class="carousel__track">
 							<?php foreach ( $media as $m ) : ?>
 								<div class="carousel__slide">
-									<?php if ( 'video' === $m['type'] ) : ?>
+									<?php if ( 'text' === $m['type'] ) : ?>
+										<?php echo iar_text_svg( get_the_ID(), 'full' ); // phpcs:ignore -- built from escaped/sanitised parts ?>
+									<?php elseif ( 'video' === $m['type'] ) : ?>
 										<video src="<?php echo esc_url( $m['src'] ); ?>"<?php echo $m['poster'] ? ' poster="' . esc_url( $m['poster'] ) . '"' : ''; ?> controls playsinline preload="metadata"></video>
 									<?php else : ?>
 										<?php echo wp_get_attachment_image( $m['id'], 'large', false, array( 'alt' => '' ) ); ?>
@@ -50,13 +52,20 @@ while ( have_posts() ) :
 						<img class="avatar" src="<?php echo esc_url( iar_avatar_url() ); ?>" alt="">
 						<div>
 							<a class="post__user" href="<?php echo esc_url( iar_profile_url() ); ?>"><?php echo esc_html( $iar['username'] ); ?></a>
+							<?php $badge = iar_status_badge( get_post_status() ); ?>
+							<span class="post__status" data-post-status-badge<?php echo $badge ? '' : ' hidden'; ?>><?php echo esc_html( $badge ); ?></span>
 							<?php if ( $location ) : ?>
 								<span class="post__location"><?php echo esc_html( $location ); ?></span>
 							<?php endif; ?>
 						</div>
-						<?php if ( $ig_url ) : ?>
-							<a class="post__more icon-btn" href="<?php echo esc_url( $ig_url ); ?>" rel="noopener" aria-label="<?php esc_attr_e( 'View original post', 'instapress-social' ); ?>"><?php echo iar_icon( 'more' ); // phpcs:ignore ?></a>
-						<?php endif; ?>
+						<?php
+						iar_template_part( 'post-menu', array(
+							'post_id'        => get_the_ID(),
+							'fallback'       => $ig_url,
+							'fallback_label' => __( 'View original post', 'instapress-social' ),
+							'original'       => $ig_url,
+						) );
+						?>
 					</header>
 					<div class="post__body">
 						<div class="comment">

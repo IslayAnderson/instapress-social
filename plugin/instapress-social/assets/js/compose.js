@@ -5,6 +5,8 @@
  * Files upload one by one (XHR, for progress) to iar_compose_upload; each
  * video first gets a poster frame captured here and uploaded with it. Then
  * iar_compose_publish creates the post (or story) and we go to it.
+ * Text posts upload nothing: the words and their look are sent with publish,
+ * and the card is drawn here exactly as includes/text-posts.php draws it.
  */
 (function () {
   'use strict';
@@ -21,7 +23,13 @@
   var MAX_ITEMS = 20;
   var RATIOS = { 'auto': null, '1:1': 1, '4:5': 0.8, '3:4': 0.75, '1.91:1': 1.91, '9:16': 0.5625 };
 
-  var state = { kind: root.dataset.kind === 'story' ? 'story' : 'post', items: [], current: 0, ratio: 'auto', busy: false, done: false };
+  var PRESETS = JSON.parse(root.dataset.textPresets || '{}');
+  var KINDS = ['post', 'text', 'story'];
+  var state = {
+    kind: KINDS.indexOf(root.dataset.kind) >= 0 ? root.dataset.kind : 'post', items: [], current: 0, ratio: 'auto', busy: false, done: false,
+    text: { scale: 100, font: 'sans', align: 'center', color: '', bg: 'sunset', bg_color: '' }
+  };
+  var editor = $('[data-text-input]');
   var input = $('[data-file-input]');
 
   /* ---------------- helpers ---------------- */
@@ -54,19 +62,84 @@
     return Math.max(min, Math.min(1.91, first.ratio));
   }
 
+  /* ---------------- text cards ---------------- */
+  function textPlain() { return (editor.innerText || '').replace(/\u00a0/g, ' ').trim(); }
+  function hasText() { return textPlain() !== ''; }
+
+  function contrast(hex) {
+    var h = hex.replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) > 160 ? '#111111' : '#ffffff';
+  }
+
+  // Same steps as iar_text_base_size(): shorter text, bigger letters; taller cards a little bigger.
+  function baseSize(length, height) {
+    var steps = [[30, 104], [80, 84], [160, 68], [300, 54], [500, 44]], size = 36;
+    for (var i = 0; i < steps.length; i++) { if (length <= steps[i][0]) { size = steps[i][1]; break; } }
+    return size * Math.max(0.85, Math.min(1.3, Math.sqrt(height / 1080)));
+  }
+
+  function textRatio() { return RATIOS[state.ratio] || 1; }
+
+  // Mirrors iar_text_render_svg() (context "full").
+  function cardSVG(html, plain, st, ratio) {
+    var w = 1080, h = Math.round(w / Math.max(0.5, Math.min(2, ratio || 1)));
+    var font = PRESETS.fonts[st.font] || PRESETS.fonts.sans;
+    var bg = st.bg === 'custom' ? { colors: [st.bg_color], ink: contrast(st.bg_color) } : PRESETS.backgrounds[st.bg];
+    var ink = st.color || bg.ink;
+    var size = Math.round(baseSize(plain.length, h) * st.scale / 100 * 10) / 10;
+    var id = 'iar-tg-preview', c = '.iar-tx.' + id, defs = '', fill = bg.colors[0];
+    if (bg.colors.length > 1) {
+      var dirs = { diagonal: 'x1="0" y1="0" x2="1" y2="1"', vertical: 'x1="0" y1="0" x2="0" y2="1"', horizontal: 'x1="0" y1="0" x2="1" y2="0"' };
+      var stops = bg.colors.map(function (col, i) { return '<stop offset="' + Math.round(i / (bg.colors.length - 1) * 1000) / 1000 + '" stop-color="' + col + '"/>'; }).join('');
+      defs = '<defs><linearGradient id="' + id + '" ' + (dirs[bg.dir] || dirs.diagonal) + '>' + stops + '</linearGradient></defs>';
+      fill = 'url(#' + id + ')';
+    }
+    var css = c + '{box-sizing:border-box;width:' + w + 'px;height:' + h + 'px;padding:96px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;' +
+      'color:' + ink + ';font-family:' + font.stack + ';font-weight:' + font.weight + ';font-size:' + size + 'px;line-height:1.3;text-align:' + st.align + ';overflow-wrap:break-word;word-wrap:break-word}' +
+      c + ' *{font-family:inherit;color:inherit;letter-spacing:normal;text-transform:none;font-size:inherit;line-height:inherit;background:none}' +
+      c + '>*{margin:0 0 .45em}' + c + '>*:last-child{margin-bottom:0}' +
+      c + ' h2{font-size:1.45em;line-height:1.12;font-weight:800}' + c + ' h3{font-size:1.2em;line-height:1.15;font-weight:800}' +
+      c + ' strong,' + c + ' b{font-weight:800}' + c + ' a{color:inherit;text-decoration:underline}' +
+      c + ' blockquote{border-' + (st.align === 'right' ? 'right' : 'left') + ':.12em solid currentColor;padding:0 .6em;font-style:italic}' +
+      c + ' ul,' + c + ' ol{padding-left:1.2em;text-align:left}' + c + ' li{margin:.1em 0}';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '" class="iar-text-card">' + defs +
+      '<rect width="' + w + '" height="' + h + '" fill="' + fill + '"/>' +
+      '<foreignObject x="0" y="0" width="' + w + '" height="' + h + '"><div xmlns="http://www.w3.org/1999/xhtml" class="iar-tx ' + id + '"><style>' + css + '</style>' + html + '</div></foreignObject></svg>';
+  }
+
+  function renderText() {
+    var st = state.text, preview = $('[data-text-preview]');
+    preview.style.setProperty('--ar', textRatio());
+    var html = hasText() ? editor.innerHTML : '<p style="opacity:.55">' + (editor.dataset.placeholder || '') + '</p>';
+    preview.innerHTML = cardSVG(html, textPlain() || editor.dataset.placeholder || '', st, textRatio());
+    $$('[data-text-bg]').forEach(function (b) { b.setAttribute('aria-pressed', st.bg === b.dataset.textBg ? 'true' : 'false'); });
+    root.querySelector('[data-text-bg-custom]').parentNode.setAttribute('aria-pressed', st.bg === 'custom' ? 'true' : 'false');
+    $$('[data-text-ink]').forEach(function (b) { b.setAttribute('aria-pressed', st.color === b.dataset.textInk ? 'true' : 'false'); });
+    var customInk = st.color && !$$('[data-text-ink]').some(function (b) { return b.dataset.textInk === st.color; });
+    root.querySelector('[data-text-ink-custom]').parentNode.setAttribute('aria-pressed', customInk ? 'true' : 'false');
+    $$('[data-text-font]').forEach(function (b) { b.setAttribute('aria-pressed', st.font === b.dataset.textFont ? 'true' : 'false'); });
+    $$('[data-text-align]').forEach(function (b) { b.setAttribute('aria-pressed', st.align === b.dataset.textAlign ? 'true' : 'false'); });
+    $('[data-text-scale]').value = st.scale;
+    $('[data-text-scale-label]').textContent = st.scale + '%';
+  }
+
   /* ---------------- rendering ---------------- */
   function render() {
+    var isText = state.kind === 'text';
     var has = state.items.length > 0;
-    $('[data-empty]').hidden = has;
-    $('[data-editor]').hidden = !has;
-    $('[data-share]').disabled = !has || state.busy;
-    $$('[data-for]').forEach(function (el) { el.hidden = el.dataset.for !== state.kind; });
+    $('[data-empty]').hidden = isText || has;
+    $('[data-editor]').hidden = !isText && !has;
+    $('[data-share]').disabled = state.busy || (isText ? !hasText() : !has);
+    $$('[data-for]').forEach(function (el) { el.hidden = el.dataset.for.split(' ').indexOf(state.kind) < 0; });
     $$('[data-kind-btn]').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.kindBtn === state.kind ? 'true' : 'false'); });
     $('[data-hint-post]').hidden = state.kind !== 'post';
     $('[data-hint-story]').hidden = state.kind !== 'story';
     $('[data-pick-label]').textContent = state.kind === 'story' ? 'Choose a photo or video' : 'Choose photos & videos';
     input.multiple = state.kind === 'post';
     $$('[data-ratio]').forEach(function (c) { c.setAttribute('aria-pressed', c.dataset.ratio === state.ratio ? 'true' : 'false'); });
+    if (isText) { renderText(); return; }
     if (!has) return;
 
     state.current = Math.min(state.current, state.items.length - 1);
@@ -161,6 +234,11 @@
       return;
     }
     if ((t = e.target.closest('[data-ratio]'))) { state.ratio = t.dataset.ratio; render(); return; }
+    if ((t = e.target.closest('[data-text-bg]'))) { state.text.bg = t.dataset.textBg; renderText(); return; }
+    if ((t = e.target.closest('[data-text-ink]'))) { state.text.color = t.dataset.textInk; renderText(); return; }
+    if ((t = e.target.closest('[data-text-font]'))) { state.text.font = t.dataset.textFont; renderText(); return; }
+    if ((t = e.target.closest('[data-text-align]'))) { state.text.align = t.dataset.textAlign; renderText(); return; }
+    if ((t = e.target.closest('[data-cmd]'))) { format(t.dataset.cmd); return; }
     if ((t = e.target.closest('[data-kind-btn]'))) {
       state.kind = t.dataset.kindBtn;
       if (state.kind === 'story' && state.items.length > 1) {
@@ -169,12 +247,58 @@
         state.items = [keep];
         state.current = 0;
       }
-      history.replaceState(null, '', state.kind === 'story' ? '?type=story' : location.pathname);
+      history.replaceState(null, '', state.kind === 'post' ? location.pathname : '?type=' + state.kind);
       render();
       return;
     }
     if (e.target.closest('[data-share]')) share();
   });
+
+  /* ---------------- rich text ---------------- */
+  try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (err) {}
+
+  function currentBlock() {
+    var sel = window.getSelection();
+    var n = sel && sel.anchorNode;
+    while (n && n !== editor) { if (n.nodeType === 1 && /^(H2|BLOCKQUOTE|P|DIV|LI)$/.test(n.nodeName)) return n.nodeName; n = n.parentNode; }
+    return '';
+  }
+
+  function format(cmd) {
+    editor.focus();
+    if (cmd === 'h2' || cmd === 'blockquote') {
+      // Toggle: applying it again goes back to a normal paragraph.
+      document.execCommand('formatBlock', false, currentBlock() === cmd.toUpperCase() ? 'p' : cmd);
+    } else if (cmd === 'createLink') {
+      var url = window.prompt('Link address', 'https://');
+      if (!url || url === 'https://') return;
+      if (!/^(https?:|mailto:)/i.test(url)) url = 'https://' + url;
+      document.execCommand('createLink', false, url);
+    } else if (cmd === 'removeFormat') {
+      document.execCommand('removeFormat');
+      document.execCommand('unlink');
+      document.execCommand('formatBlock', false, 'p');
+    } else {
+      document.execCommand(cmd);
+    }
+    render();
+  }
+
+  // Keep the selection when pressing toolbar buttons.
+  root.querySelector('.compose__toolbar').addEventListener('mousedown', function (e) { if (e.target.closest('[data-cmd]')) e.preventDefault(); });
+  editor.addEventListener('input', render);
+  // Pasted text arrives plain (no outside fonts, colours or sizes).
+  editor.addEventListener('paste', function (e) {
+    e.preventDefault();
+    var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, text);
+  });
+  editor.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && /^[biu]$/i.test(e.key)) { e.preventDefault(); format({ b: 'bold', i: 'italic', u: 'underline' }[e.key.toLowerCase()]); }
+  });
+  $('[data-text-scale]').addEventListener('input', function (e) { state.text.scale = parseInt(e.target.value, 10) || 100; renderText(); });
+  root.querySelector('[data-text-bg-custom]').addEventListener('input', function (e) { state.text.bg = 'custom'; state.text.bg_color = e.target.value; renderText(); });
+  root.querySelector('[data-text-ink-custom]').addEventListener('input', function (e) { state.text.color = e.target.value; renderText(); });
 
   // Swipe the preview to step through a carousel.
   var startX = null;
@@ -187,7 +311,7 @@
   });
 
   window.addEventListener('beforeunload', function (e) {
-    if (state.items.length && !state.done) { e.preventDefault(); e.returnValue = ''; }
+    if ((state.items.length || hasText()) && !state.done) { e.preventDefault(); e.returnValue = ''; }
   });
 
   /* ---------------- sharing ---------------- */
@@ -265,7 +389,9 @@
   }
 
   async function share() {
-    if (state.busy || !state.items.length) return;
+    if (state.busy) return;
+    if (state.kind === 'text') return shareText();
+    if (!state.items.length) return;
     state.busy = true;
     render();
     var items = state.kind === 'story' ? state.items.slice(0, 1) : state.items.slice();
@@ -299,6 +425,32 @@
         fields.story_link = root.querySelector('[name="story_link"]').value;
       }
       var res = await post(fields, null, 'Publishing');
+      progress('Shared!', 1);
+      state.done = true;
+      location.href = res.redirect;
+    } catch (err) {
+      $('[data-progress]').hidden = true;
+      state.busy = false;
+      render();
+      window.alert(err.message || 'Something went wrong — please try again.');
+    }
+  }
+
+  async function shareText() {
+    if (!hasText()) return;
+    state.busy = true;
+    render();
+    try {
+      progress('Publishing…', 0.5);
+      var res = await post({
+        action: 'iar_compose_publish', kind: 'text',
+        text_html: editor.innerHTML,
+        text_scale: state.text.scale, text_font: state.text.font, text_align: state.text.align,
+        text_color: state.text.color, text_bg: state.text.bg, text_bg_color: state.text.bg_color,
+        ratio: state.ratio,
+        caption: root.querySelector('[name="caption"]').value,
+        location: root.querySelector('[name="location"]').value
+      }, null, 'Publishing');
       progress('Shared!', 1);
       state.done = true;
       location.href = res.redirect;
