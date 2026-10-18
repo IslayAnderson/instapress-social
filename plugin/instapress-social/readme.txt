@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.24.0
+Stable tag: 1.24.1
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -55,6 +55,9 @@ Every event carries this site's domain, the plugin and WordPress versions and th
 Turn it off under Settings → instapress-social → Privacy ("Share anonymous usage statistics"), with `define( 'IAR_DISABLE_SETUP_EVENT', true );` in wp-config.php, or by returning false from the `iar_send_usage_stats` filter.
 
 == Changelog ==
+
+= 1.24.1 =
+* Fixed: the + on your story ring in the home feed stretched to the full width of the story instead of being a small round button.
 
 = 1.24.0 =
 * Your feed has moved inside your profile folder: /social/feed/ (or /gram/feed/, whatever your profile folder is) instead of /feed/insta/. It follows the folder if you change it.

@@ -321,7 +321,7 @@ body.instapress-social { margin: 0; background: var(--bg); color: var(--text); }
 .stories::-webkit-scrollbar { display: none; }
 .story { position: relative; }
 .story a, .story button { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 66px; padding: 0; color: inherit; }
-.story__add { position: absolute; top: 40px; left: 44px; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff !important; border: 2px solid var(--bg); font-weight: 700; line-height: 16px; text-align: center; display: block !important; font-size: 15px; }
+.story .story__add { /* more specific than ".story a", which makes story links a 66px-wide column */ position: absolute; top: 40px; left: 44px; display: flex !important; align-items: center; justify-content: center; box-sizing: border-box; width: 20px; height: 20px; padding: 0; gap: 0; border-radius: 50%; background: var(--accent); color: #fff !important; border: 2px solid var(--bg); font-weight: 700; font-size: 15px; line-height: 1; }
 .story__ring { display: flex; padding: 2px; border-radius: 50%; background: var(--ring); }
 .story__ring--own { background: var(--border); }
 .story__ring .avatar { width: 56px; height: 56px; border: 2px solid var(--bg); }
