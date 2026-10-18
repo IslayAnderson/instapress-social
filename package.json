@@ -1,0 +1,8 @@
+{
+  "name": "instopress-social-build",
+  "private": true,
+  "description": "Build tooling for the instopress-social plugin (bin/build.sh minifies its CSS/JS with esbuild).",
+  "devDependencies": {
+    "esbuild": "0.24.0"
+  }
+}

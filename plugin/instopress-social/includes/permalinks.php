@@ -94,7 +94,7 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 	if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) || ! $screen || IAR_POST_TYPE !== $screen->post_type ) {
 		return;
 	}
-	wp_enqueue_script( 'iar-generate', IAR_URL . 'assets/js/admin-generate.js', array(), IAR_VERSION, true );
+	wp_enqueue_script( 'iar-generate', iar_asset_url( 'js/admin-generate.js' ), array(), IAR_VERSION, true );
 	wp_localize_script( 'iar-generate', 'IGP', array(
 		'epoch'   => IAR_EPOCH_MS,
 		'base'    => home_url( '/' . iar_post_slug() . '/' ),

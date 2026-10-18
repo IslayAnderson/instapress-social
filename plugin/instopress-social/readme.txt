@@ -4,7 +4,7 @@ Tags: instopress-social, archive, gallery, import, social
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.28.0
+Stable tag: 1.29.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -70,6 +70,9 @@ Turn it on or off under Settings → instopress-social → Privacy ("Share anony
 * GitHub — instopress-social Pro checks https://api.github.com/repos/IslayAnderson/instopress-social/releases/latest for updates and downloads them from GitHub. Terms: https://docs.github.com/site-policy/github-terms/github-terms-of-service — Privacy policy: https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement (Pro)
 
 == Changelog ==
+
+= 1.29.0 =
+* Smaller downloads: release builds include minified copies of the plugin's CSS and JavaScript (about 40% smaller before compression), which the plugin serves automatically. With SCRIPT_DEBUG on, or when running from source without a build, the readable files are used instead.
 
 = 1.28.0 =
 * Faster profile grid on phones: the first tile that shows a picture loads first (text posts and videos without a poster are skipped), the first three rows load straight away, and tiles carry srcset/sizes so phones download a small copy. A new 480px "tile" image size fills the gap between 300px and 768px; new uploads get it automatically and existing pictures are filled in a few at a time in the background, or all at once with `wp instopress-social tiles`.

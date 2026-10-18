@@ -179,9 +179,9 @@ add_action( 'wp_enqueue_scripts', function () {
 	if ( ! iar_templates_enabled() || ! iar_is_view() ) {
 		return;
 	}
-	wp_enqueue_style( 'instopress-social', IAR_URL . 'assets/css/style.css', array(), IAR_VERSION );
-	wp_enqueue_script( 'instopress-social', IAR_URL . 'assets/js/app.js', array(), IAR_VERSION, true );
-	wp_enqueue_script( 'instopress-social-stories', IAR_URL . 'assets/js/stories.js', array(), IAR_VERSION, true );
+	wp_enqueue_style( 'instopress-social', iar_asset_url( 'css/style.css' ), array(), IAR_VERSION );
+	wp_enqueue_script( 'instopress-social', iar_asset_url( 'js/app.js' ), array(), IAR_VERSION, true );
+	wp_enqueue_script( 'instopress-social-stories', iar_asset_url( 'js/stories.js' ), array(), IAR_VERSION, true );
 	wp_localize_script( 'instopress-social', 'IAR', array(
 		'hashtagBase' => iar_profile_url(),
 		'people'      => iar_known_people(),
@@ -193,7 +193,7 @@ add_action( 'wp_enqueue_scripts', function () {
 		iar_captcha_enqueue();
 	}
 	if ( iar_is_compose() ) {
-		wp_enqueue_script( 'instopress-social-compose', IAR_URL . 'assets/js/compose.js', array(), IAR_VERSION, true );
+		wp_enqueue_script( 'instopress-social-compose', iar_asset_url( 'js/compose.js' ), array(), IAR_VERSION, true );
 	}
 } );
 

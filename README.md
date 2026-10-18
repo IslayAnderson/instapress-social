@@ -43,7 +43,8 @@ One source tree, two plugins (both install as `instopress-social/`):
 Pro-only code lives in `plugin/instopress-social/includes/pro/`; the plugin loads it when it's there (`IAR_PRO`). Build both zips from a tag:
 
 ```bash
-bin/build.sh v1.26.0
+npm ci            # once: installs esbuild, used to minify the CSS/JS
+bin/build.sh v1.29.0
 ```
 
 The WordPress.org build drops `includes/pro/`, the `Update URI` header and readme lines ending in "(Pro)". Installed copies update from the asset named `instopress-social-X.Y.Z.zip`, so that name always carries the Pro build.

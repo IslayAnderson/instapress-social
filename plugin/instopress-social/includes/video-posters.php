@@ -187,7 +187,7 @@ add_action( 'wp_ajax_iar_save_video_poster', function () {
  * ---------------------------------------------------------------------- */
 
 function iar_enqueue_video_posters_js() {
-	wp_enqueue_script( 'iar-video-posters', IAR_URL . 'assets/js/video-posters.js', array(), IAR_VERSION, true );
+	wp_enqueue_script( 'iar-video-posters', iar_asset_url( 'js/video-posters.js' ), array(), IAR_VERSION, true );
 }
 
 /** Button + progress, driven by assets/js/video-posters.js. */

@@ -10,3 +10,4 @@ dist/
 
 # IDE settings
 .idea/
+node_modules/
