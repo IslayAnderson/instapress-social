@@ -121,7 +121,7 @@ add_filter( 'get_lastpostmodified', function ( $date, $timezone, $post_type ) {
 function iar_post_to_item( $post ) {
 	$post  = get_post( $post );
 	$media = array();
-	foreach ( iar_get_media( $post->ID ) as $m ) {
+	foreach ( iar_get_media( $post->ID, 0, false ) as $m ) { // no tile thumbs needed here
 		$meta = 'text' === $m['type']
 			? array( 'width' => 1080, 'height' => (int) round( 1080 / iar_aspect_ratio( $post->ID ) ) )
 			: wp_get_attachment_metadata( $m['id'] );
@@ -167,6 +167,7 @@ function iar_render_feed() {
 		'posts_per_page' => (int) apply_filters( 'iar_feed_size', 30 ),
 		'post_status'    => 'publish',
 	) );
+	iar_prime_media( $posts ); // get_posts() skips the_posts, where lists are usually primed
 	$me = iar_own_profile();
 
 	header( 'Content-Type: application/rss+xml; charset=' . get_option( 'blog_charset' ), true );

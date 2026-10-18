@@ -96,9 +96,23 @@ iar_template_part( 'header' );
 			<?php if ( have_posts() ) : ?>
 				<div class="grid" data-grid style="--tile-ar: <?php echo esc_attr( iar_grid_ratio() ); ?>">
 					<?php
+					// Only the top of the first page is on screen at load; "Load more" pages stay lazy.
+					$priority_left = ! is_paged();
 					while ( have_posts() ) :
 						the_post();
-						iar_template_part( 'grid-item', is_paged() ? array() : array( 'index' => $GLOBALS['wp_query']->current_post ) );
+						$tile = array();
+						if ( ! is_paged() ) {
+							$tile = array( 'index' => $GLOBALS['wp_query']->current_post, 'priority' => false );
+							// Fetch the first tile that shows a picture first (text cards and videos without a poster have none).
+							if ( $priority_left && $tile['index'] < 9 ) {
+								$media = iar_get_media( null, 1 );
+								if ( $media && 'text' !== $media[0]['type'] && $media[0]['thumb'] ) {
+									$tile['priority'] = true;
+									$priority_left    = false;
+								}
+							}
+						}
+						iar_template_part( 'grid-item', $tile );
 					endwhile;
 					?>
 				</div>

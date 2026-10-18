@@ -138,6 +138,29 @@ class IAR_CLI {
 			WP_CLI::line( iar_unique_shortcode( $time ) );
 		}
 	}
+
+	/**
+	 * Make the grid tile size (480px wide) for pictures that don't have it yet.
+	 *
+	 * New uploads get it automatically, and older ones are filled in a few at a
+	 * time in the background; this does all of them now.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp instopress-social tiles
+	 *
+	 * @when after_wp_load
+	 */
+	public function tiles( $args, $assoc ) {
+		$after = 0;
+		$made  = 0;
+		while ( $after = iar_tile_backfill_batch( $after, 50, $made ) ) {
+			WP_CLI::log( "Up to post {$after}: {$made} made." );
+		}
+		update_option( IAR_TILE_CRON, array( 'ver' => IAR_TILE_VER, 'done' => true ), false );
+		wp_clear_scheduled_hook( IAR_TILE_CRON );
+		WP_CLI::success( "Made {$made} tile images." );
+	}
 }
 
 WP_CLI::add_command( 'instopress-social', 'IAR_CLI' );

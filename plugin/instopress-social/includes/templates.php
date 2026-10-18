@@ -86,6 +86,7 @@ function iar_home_entries() {
 
 	if ( apply_filters( 'iar_home_includes_own', true ) ) {
 		$own = get_posts( array( 'post_type' => IAR_POST_TYPE, 'posts_per_page' => 30, 'post_status' => 'publish' ) );
+		iar_prime_media( $own ); // get_posts() skips the_posts, where lists are usually primed
 		foreach ( $own as $p ) {
 			$entries[] = array( 'item' => iar_post_to_item( $p ), 'profile' => $me );
 		}

@@ -48,6 +48,19 @@ function iar_profile_url() {
  * the database, so plugins that substitute a default image (e.g. "Default
  * Featured Image") can't make it look like a video has a poster.
  */
+/**
+ * 'image', 'video' or '' for an attachment, from its MIME type. Same answer as
+ * wp_attachment_is() for this plugin's media, without its file and filter work
+ * (it runs for every slide of every post on a page).
+ */
+function iar_attachment_kind( $id ) {
+	$mime = (string) get_post_mime_type( $id );
+	if ( 0 === strpos( $mime, 'image/' ) ) {
+		return 'image';
+	}
+	return 0 === strpos( $mime, 'video/' ) ? 'video' : '';
+}
+
 function iar_own_thumbnail_id( $post_id ) {
 	// The raw meta cache (filled by iar_prime_media) isn't filtered either, and saves a query per item.
 	$meta = wp_cache_get( $post_id, 'post_meta' );
@@ -60,7 +73,7 @@ function iar_own_thumbnail_id( $post_id ) {
 			$post_id
 		) );
 	}
-	return $id && wp_attachment_is_image( $id ) ? $id : 0;
+	return $id && 'image' === iar_attachment_kind( $id ) ? $id : 0;
 }
 
 /**
@@ -123,33 +136,90 @@ function iar_video_poster_id( $video_id, $post_id = 0, $only_item = false ) {
  * [ [ 'id' => 12, 'type' => 'image'|'video', 'src' => url, 'thumb' => url, 'poster' => url, 'poster_id' => id ], … ]
  * A video with no poster has empty 'thumb'/'poster' — templates then show its first frame.
  */
-function iar_get_media( $post_id = null ) {
-	$post_id = $post_id ?: get_the_ID();
+function iar_get_media( $post_id = null, $limit = 0, $thumbs = true ) {
+	$post_id = (int) ( $post_id ?: get_the_ID() );
+	if ( ! $thumbs && ! isset( $GLOBALS['iar_media_memo'][ $post_id ] ) ) {
+		// Lists that never show tiles (feed, home cards) skip the 'thumb' size for every
+		// slide after the first; it costs an image lookup each, through other plugins' filters.
+		$key  = $post_id . ':nothumbs';
+		$memo = &$GLOBALS['iar_media_memo'];
+		if ( ! isset( $memo[ $key ] ) ) {
+			$memo[ $key ] = iar_build_media( $post_id, 0, false );
+		}
+		return $limit ? array_slice( $memo[ $key ], 0, $limit ) : $memo[ $key ];
+	}
+	// Worked out once per request (a page asks for the same post's media several times,
+	// e.g. for the item and again for its aspect ratio). Cleared when the media change.
+	$memo = &$GLOBALS['iar_media_memo'];
+	if ( isset( $memo[ $post_id ] ) ) {
+		return $limit ? array_slice( $memo[ $post_id ], 0, $limit ) : $memo[ $post_id ];
+	}
+	if ( 1 === $limit && isset( $memo[ $post_id . ':nothumbs' ] ) ) {
+		return array_slice( $memo[ $post_id . ':nothumbs' ], 0, 1 ); // its first slide has its thumb
+	}
+	$out = iar_build_media( $post_id, $limit );
+	if ( ! $limit ) {
+		$memo[ $post_id ] = $out;
+	}
+	return $out;
+}
+
+/** How many slides a post has, without building their URLs. */
+function iar_media_count( $post_id = null ) {
+	$post_id = (int) ( $post_id ?: get_the_ID() );
+	if ( isset( $GLOBALS['iar_media_memo'][ $post_id ] ) ) {
+		return count( $GLOBALS['iar_media_memo'][ $post_id ] );
+	}
+	if ( function_exists( 'iar_is_text_post' ) && iar_is_text_post( $post_id ) ) {
+		return 1;
+	}
+	$n = count( array_filter( array_map( 'absint', (array) iar_field( 'media', $post_id ) ) ) );
+	return $n ?: ( iar_own_thumbnail_id( $post_id ) ? 1 : 0 );
+}
+
+// A post's media changed (gallery, type, poster/featured image): forget what was worked out.
+foreach ( array( 'added_post_meta', 'updated_post_meta', 'deleted_post_meta' ) as $iar_hook ) {
+	add_action( $iar_hook, function ( $meta_id, $object_id ) {
+		unset( $GLOBALS['iar_media_memo'][ (int) $object_id ], $GLOBALS['iar_media_memo'][ (int) $object_id . ':nothumbs' ] );
+	}, 10, 2 );
+}
+unset( $iar_hook );
+add_action( 'clean_post_cache', function ( $post_id ) {
+	unset( $GLOBALS['iar_media_memo'][ (int) $post_id ], $GLOBALS['iar_media_memo'][ (int) $post_id . ':nothumbs' ] );
+} );
+
+/** Builds iar_get_media()'s slides; with $limit, only the first $limit of them; without $thumbs, 'thumb' only for the first. */
+function iar_build_media( $post_id, $limit = 0, $thumbs = true ) {
 	if ( function_exists( 'iar_is_text_post' ) && iar_is_text_post( $post_id ) ) {
 		// A text post's one "slide" is its card (includes/text-posts.php).
 		$url = iar_text_svg_url( $post_id );
 		return array( array( 'id' => 0, 'type' => 'text', 'src' => $url, 'thumb' => $url, 'poster' => '' ) );
 	}
 	$ids     = array_values( array_filter( array_map( 'absint', (array) iar_field( 'media', $post_id ) ) ) );
+	$single  = 1 === count( $ids );
 	$out     = array();
 
 	foreach ( $ids as $id ) {
-		if ( wp_attachment_is( 'video', $id ) ) {
-			$poster_id = iar_video_poster_id( $id, $post_id, 1 === count( $ids ) );
+		if ( $limit && count( $out ) >= $limit ) {
+			break;
+		}
+		$kind = iar_attachment_kind( $id );
+		if ( 'video' === $kind ) {
+			$poster_id = iar_video_poster_id( $id, $post_id, $single );
 			$out[]     = array(
 				'id'        => $id,
 				'type'      => 'video',
 				'src'       => wp_get_attachment_url( $id ),
-				'thumb'     => $poster_id ? (string) wp_get_attachment_image_url( $poster_id, 'medium_large' ) : '',
+				'thumb'     => $poster_id && ( $thumbs || ! $out ) ? (string) wp_get_attachment_image_url( $poster_id, 'medium_large' ) : '',
 				'poster'    => $poster_id ? (string) wp_get_attachment_image_url( $poster_id, 'large' ) : '',
 				'poster_id' => $poster_id,
 			);
-		} elseif ( wp_attachment_is_image( $id ) ) {
+		} elseif ( 'image' === $kind ) {
 			$out[] = array(
 				'id'    => $id,
 				'type'  => 'image',
 				'src'   => wp_get_attachment_image_url( $id, 'large' ),
-				'thumb' => wp_get_attachment_image_url( $id, 'medium_large' ),
+				'thumb' => $thumbs || ! $out ? wp_get_attachment_image_url( $id, 'medium_large' ) : '',
 			);
 		}
 	}
@@ -217,7 +287,7 @@ function iar_aspect_ratio( $post_id = null ) {
 		return (float) $ratios[ $choice ];
 	}
 
-	$media = iar_get_media( $post_id );
+	$media = iar_get_media( $post_id, 1 ); // only the first slide decides
 	$first = $media[0] ?? null;
 	$ratio = $first ? iar_media_ratio( $first['id'] ) : null;
 	if ( ! $ratio && $first && 'video' === $first['type'] && ! empty( $first['poster_id'] ) ) {
