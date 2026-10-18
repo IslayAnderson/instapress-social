@@ -181,14 +181,21 @@ add_filter( 'upgrader_source_selection', function ( $source, $remote_source, $up
  * main file). WordPress removes the old folder when updating; keep it active, network-
  * active and auto-updating under its new name instead of finding it "missing".
  */
-function iar_follow_renamed_plugin( $old, $new ) {
+function iar_follow_renamed_plugin( $old, $new, $was_active = false ) {
 	$swap = function ( $list ) use ( $old, $new ) {
 		$list = array_values( array_unique( array_map( function ( $p ) use ( $old, $new ) {
 			return $p === $old ? $new : $p;
 		}, (array) $list ) ) );
 		return $list;
 	};
-	update_option( 'active_plugins', $swap( get_option( 'active_plugins', array() ) ) );
+	$active = $swap( get_option( 'active_plugins', array() ) );
+	// Updates run from wp-admin deactivate the plugin first and reactivate it by its old name
+	// afterwards, which no longer exists: switch the new one on instead (without running it now).
+	if ( $was_active && ! in_array( $new, $active, true ) ) {
+		$active[] = $new;
+		sort( $active );
+	}
+	update_option( 'active_plugins', $active );
 	update_site_option( 'auto_update_plugins', $swap( get_site_option( 'auto_update_plugins', array() ) ) );
 	if ( is_multisite() ) {
 		$network = (array) get_site_option( 'active_sitewide_plugins', array() );
@@ -200,6 +207,14 @@ function iar_follow_renamed_plugin( $old, $new ) {
 	}
 }
 
+// Remember whether the plugin is on before an update deactivates it (WordPress does that at priority 10).
+add_filter( 'upgrader_pre_install', function ( $response, $extra ) {
+	if ( ! empty( $extra['plugin'] ) && plugin_basename( IAR_FILE ) === $extra['plugin'] ) {
+		$GLOBALS['iar_active_before_update'] = in_array( $extra['plugin'], (array) get_option( 'active_plugins', array() ), true );
+	}
+	return $response;
+}, 1, 2 );
+
 add_filter( 'upgrader_post_install', function ( $response, $extra, $result ) {
 	if ( empty( $extra['plugin'] ) || plugin_basename( IAR_FILE ) !== $extra['plugin'] || is_wp_error( $response ) ) {
 		return $response;
@@ -208,7 +223,7 @@ add_filter( 'upgrader_post_install', function ( $response, $extra, $result ) {
 	if ( $folder && is_file( WP_PLUGIN_DIR . '/' . $folder . '/instopress-social.php' ) ) {
 		$new = $folder . '/instopress-social.php';
 		if ( $new !== $extra['plugin'] ) {
-			iar_follow_renamed_plugin( $extra['plugin'], $new );
+			iar_follow_renamed_plugin( $extra['plugin'], $new, ! empty( $GLOBALS['iar_active_before_update'] ) );
 		}
 	}
 	return $response;

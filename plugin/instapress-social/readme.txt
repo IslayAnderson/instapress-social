@@ -4,7 +4,7 @@ Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.26.1
+Stable tag: 1.26.2
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -70,6 +70,9 @@ Turn it on or off under Settings → instapress-social → Privacy ("Share anony
 * GitHub — instapress-social Pro checks https://api.github.com/repos/IslayAnderson/instapress-social/releases/latest for updates and downloads them from GitHub. Terms: https://docs.github.com/site-policy/github-terms/github-terms-of-service — Privacy policy: https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement (Pro)
 
 == Changelog ==
+
+= 1.26.2 =
+* The move to the new name keeps the plugin switched on however the update is run (from the Plugins screen, the Updates screen, automatically, or with WP-CLI).
 
 = 1.26.1 =
 * Getting ready for the plugin's new name, instopress-social: updates are also accepted from the renamed GitHub repository and zips, and when the renamed version installs it moves to its new folder and stays active and auto-updating. Please update to this version before 1.27.0.
