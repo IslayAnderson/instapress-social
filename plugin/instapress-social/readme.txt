@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.20.0
+Stable tag: 1.21.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -48,6 +48,12 @@ Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use
 When the plugin is set up (activated, or first run after updating), it sends one "plugin_setup" event to the plugin author's Google Analytics, so they know roughly how many sites use it. To send it, the plugin first reads the Analytics details from blog.islayanderson.co.uk (a plain request; nothing about your site is included). It contains the site's domain, the plugin and WordPress versions and the environment type (production, staging, local) — nothing about your visitors, posts or users. To turn it off, add `define( 'IAR_DISABLE_SETUP_EVENT', true );` to wp-config.php, or return false from the `iar_send_setup_event` filter.
 
 == Changelog ==
+
+= 1.21.0 =
+* Privacy options under Settings → instapress-social → Templates → Privacy:
+* "Only I can see my home feed": the home feed (posts and stories from everyone you follow) asks visitors to log in, tells logged-in people who can't edit posts that it's private, and its links are hidden from them.
+* "Hide follower and following counts from visitors": the counts only show for you and anyone who can edit posts.
+* Both are off by default.
 
 = 1.20.0 =
 * New option under Settings → instapress-social → Templates: "Hide the WordPress toolbar on these pages", for a cleaner, app-like look when you're logged in. It only affects instapress-social pages (profile, home feed, posts, New post); wp-admin and the rest of your site are unchanged. Off by default.

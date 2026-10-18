@@ -14,11 +14,11 @@ $total       = (int) wp_count_posts( IAR_POST_TYPE )->publish;
 $website     = $iar['website'] ? preg_replace( '#^https?://(www\.)?#', '', untrailingslashit( $iar['website'] ) ) : '';
 
 $stats = array( array( iar_count( $total ), _n( 'post', 'posts', $total, 'instapress-social' ) ) );
-if ( '' !== $iar['followers'] ) {
+if ( '' !== $iar['followers'] && iar_show_follow_counts() ) {
 	$stats[] = array( $iar['followers'], __( 'followers', 'instapress-social' ) );
 }
 $following_n = count( iar_following() );
-if ( $following_n || '' !== $iar['following'] ) {
+if ( ( $following_n || '' !== $iar['following'] ) && iar_show_follow_counts() ) {
 	$stats[] = array( $following_n ? iar_count( $following_n ) : $iar['following'], __( 'following', 'instapress-social' ) );
 }
 
@@ -79,7 +79,9 @@ iar_template_part( 'header' );
 			<nav class="tabs" aria-label="<?php esc_attr_e( 'Profile sections', 'instapress-social' ); ?>">
 				<a class="tabs__tab<?php echo 'posts' === $tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( $profile_url ); ?>"<?php echo 'posts' === $tab ? ' aria-current="page"' : ''; ?>><?php echo iar_icon( 'grid' ); // phpcs:ignore ?><span><?php esc_html_e( 'Posts', 'instapress-social' ); ?></span></a>
 				<a class="tabs__tab<?php echo 'reels' === $tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( 'view', 'reels', $profile_url ) ); ?>"<?php echo 'reels' === $tab ? ' aria-current="page"' : ''; ?>><?php echo iar_icon( 'reels' ); // phpcs:ignore ?><span><?php esc_html_e( 'Reels', 'instapress-social' ); ?></span></a>
+				<?php if ( iar_can_view_home() ) : ?>
 				<a class="tabs__tab tabs__tab--home" href="<?php echo esc_url( iar_home_url() ); ?>"><?php echo iar_icon( 'home' ); // phpcs:ignore ?><span><?php esc_html_e( 'Home', 'instapress-social' ); ?></span></a>
+				<?php endif; ?>
 			</nav>
 
 			<?php $hashtag = iar_current_hashtag(); ?>

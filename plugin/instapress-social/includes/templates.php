@@ -10,6 +10,37 @@ function iar_is_view() {
 	return is_post_type_archive( IAR_POST_TYPE ) || is_singular( IAR_POST_TYPE ) || iar_is_home() || ( function_exists( 'iar_is_compose' ) && iar_is_compose() );
 }
 
+/** Can the current visitor see the home feed? (Settings → Privacy.) */
+function iar_can_view_home() {
+	return ! iar_setting( 'private_home' ) || ( function_exists( 'iar_sees_unpublished' ) && iar_sees_unpublished() );
+}
+
+/** Show follower / following counts to the current visitor? (Settings → Privacy.) */
+function iar_show_follow_counts() {
+	return ! iar_setting( 'private_follows' ) || ( function_exists( 'iar_sees_unpublished' ) && iar_sees_unpublished() );
+}
+
+// A private home feed: visitors log in first; logged-in people who can't edit posts are told it's private.
+add_action( 'template_redirect', function () {
+	if ( ! iar_is_home() || iar_can_view_home() ) {
+		return;
+	}
+	if ( ! is_user_logged_in() ) {
+		wp_safe_redirect( wp_login_url( iar_home_url() ) );
+		exit;
+	}
+	wp_die(
+		esc_html__( 'This home feed is private.', 'instapress-social' ) . ' <a href="' . esc_url( iar_profile_url() ) . '">' . esc_html__( 'See the profile instead', 'instapress-social' ) . '</a>',
+		esc_html__( 'Private', 'instapress-social' ),
+		array( 'response' => 403 )
+	);
+}, 5 );
+add_action( 'template_redirect', function () {
+	if ( iar_is_home() && iar_setting( 'private_home' ) ) {
+		nocache_headers(); // never cache a private page
+	}
+}, 6 );
+
 // Settings → "Hide the WordPress toolbar on these pages".
 add_filter( 'show_admin_bar', function ( $show ) {
 	return ( $show && iar_setting( 'hide_admin_bar' ) && did_action( 'wp' ) && iar_is_view() ) ? false : $show;

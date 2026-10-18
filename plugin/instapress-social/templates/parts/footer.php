@@ -16,7 +16,9 @@ $profile_url = iar_profile_url();
 	</main>
 
 	<nav class="bottombar" aria-label="<?php esc_attr_e( 'Primary', 'instapress-social' ); ?>">
-		<a href="<?php echo esc_url( iar_home_url() ); ?>" aria-label="<?php esc_attr_e( 'Home', 'instapress-social' ); ?>"><?php echo iar_icon( 'home' ); // phpcs:ignore ?></a>
+		<?php if ( iar_can_view_home() ) : ?>
+			<a href="<?php echo esc_url( iar_home_url() ); ?>" aria-label="<?php esc_attr_e( 'Home', 'instapress-social' ); ?>"><?php echo iar_icon( 'home' ); // phpcs:ignore ?></a>
+		<?php endif; ?>
 		<a href="<?php echo esc_url( add_query_arg( 'view', 'reels', $profile_url ) ); ?>" aria-label="<?php esc_attr_e( 'Reels', 'instapress-social' ); ?>"><?php echo iar_icon( 'reels' ); // phpcs:ignore ?></a>
 		<?php if ( function_exists( 'iar_can_compose' ) && iar_can_compose() ) : ?>
 			<a href="<?php echo esc_url( iar_compose_url() ); ?>" aria-label="<?php esc_attr_e( 'New post', 'instapress-social' ); ?>"><?php echo iar_icon( 'create' ); // phpcs:ignore ?></a>
