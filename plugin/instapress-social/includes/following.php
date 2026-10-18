@@ -22,6 +22,50 @@ function iar_follow_id( $feed_url ) {
 	return substr( md5( strtolower( untrailingslashit( $feed_url ) ) ), 0, 12 );
 }
 
+/**
+ * Who a follow is, whatever address their feed had: site + username. The same
+ * person can turn up under two feed addresses (e.g. /feed/insta/ and its
+ * successor /social/feed/), which would otherwise be two separate follows.
+ */
+function iar_follow_identity( $f ) {
+	$host = (string) wp_parse_url( ( $f['profile'] ?? '' ) ?: ( $f['feed'] ?? '' ), PHP_URL_HOST );
+	return strtolower( preg_replace( '/^www\./i', '', $host ) . '|' . ( $f['username'] ?? '' ) );
+}
+
+/** Ids of every follow of the same person as $f. */
+function iar_follow_ids_like( $all, $f ) {
+	$who = iar_follow_identity( $f );
+	return array_keys( array_filter( $all, function ( $other ) use ( $who ) {
+		return iar_follow_identity( $other ) === $who;
+	} ) );
+}
+
+/** Merge duplicate follows of one person: keep the most recently synced. Returns how many were removed. */
+function iar_dedupe_following() {
+	$all     = iar_following();
+	$removed = 0;
+	$seen    = array();
+	uasort( $all, function ( $a, $b ) {
+		return ( $b['synced'] ?? 0 ) <=> ( $a['synced'] ?? 0 );
+	} );
+	foreach ( $all as $id => $f ) {
+		$who = iar_follow_identity( $f );
+		if ( isset( $seen[ $who ] ) ) {
+			$keep = $seen[ $who ];
+			$all[ $keep ]['added'] = min( $all[ $keep ]['added'] ?? time(), $f['added'] ?? time() );
+			unset( $all[ $id ] );
+			delete_option( IAR_ITEMS_OPTION . $id );
+			++$removed;
+		} else {
+			$seen[ $who ] = $id;
+		}
+	}
+	if ( $removed ) {
+		update_option( IAR_FOLLOWING_OPTION, $all, false );
+	}
+	return $removed;
+}
+
 function iar_following_items( $id ) {
 	return (array) get_option( IAR_ITEMS_OPTION . $id, array() );
 }
@@ -208,8 +252,14 @@ function iar_follow( $url ) {
 	}
 	list( $profile, $items ) = $parsed;
 
-	$id                = iar_follow_id( $feed );
-	$all               = iar_following();
+	$all  = iar_following();
+	$same = iar_follow_ids_like( $all, $profile );
+	// Already following this person (maybe at an older feed address): update that follow instead of adding another.
+	$id   = $same ? $same[0] : iar_follow_id( $feed );
+	foreach ( array_slice( $same, 1 ) as $dupe ) {
+		unset( $all[ $dupe ] );
+		delete_option( IAR_ITEMS_OPTION . $dupe );
+	}
 	$profile['added']  = $all[ $id ]['added'] ?? time();
 	$profile['synced'] = time();
 	$profile['error']  = '';
@@ -220,11 +270,19 @@ function iar_follow( $url ) {
 	return $profile;
 }
 
+/** Stop following someone (every follow of that person, if they were followed twice). Returns their username, or ''. */
 function iar_unfollow( $id ) {
 	$all = iar_following();
-	unset( $all[ $id ] );
+	if ( empty( $all[ $id ] ) ) {
+		return '';
+	}
+	$username = (string) $all[ $id ]['username'];
+	foreach ( array_unique( array_merge( array( $id ), iar_follow_ids_like( $all, $all[ $id ] ) ) ) as $gone ) {
+		unset( $all[ $gone ] );
+		delete_option( IAR_ITEMS_OPTION . $gone );
+	}
 	update_option( IAR_FOLLOWING_OPTION, $all, false );
-	delete_option( IAR_ITEMS_OPTION . $id );
+	return $username;
 }
 
 /** Re-fetch one followed feed; keeps the old posts if the fetch fails. */
@@ -247,6 +305,7 @@ function iar_refresh_one( $id ) {
 }
 
 function iar_refresh_all() {
+	iar_dedupe_following();
 	foreach ( array_keys( iar_following() ) as $id ) {
 		iar_refresh_one( $id );
 	}
@@ -292,19 +351,24 @@ add_action( 'admin_post_iar_following_action', function () {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_die( esc_html__( 'Sorry, you can\'t do that.', 'instapress-social' ) );
 	}
-	$id = sanitize_key( $_POST['id'] ?? '' );
+	$id   = sanitize_key( $_POST['id'] ?? '' );
+	$args = array();
 	switch ( sanitize_key( $_POST['do'] ?? '' ) ) {
 		case 'unfollow':
-			iar_unfollow( $id );
+			$who  = iar_unfollow( $id );
+			$args = $who ? array( 'iar_unfollowed' => rawurlencode( $who ) ) : array( 'iar_error' => rawurlencode( __( 'That account wasn\'t in your list — it may already be unfollowed.', 'instapress-social' ) ) );
 			break;
 		case 'refresh':
 			iar_refresh_one( $id );
+			$f    = iar_following()[ $id ] ?? null;
+			$args = ! $f ? array() : ( empty( $f['error'] ) ? array( 'iar_refreshed' => rawurlencode( $f['username'] ) ) : array( 'iar_error' => rawurlencode( sprintf( __( 'Couldn\'t refresh @%1$s: %2$s', 'instapress-social' ), $f['username'], $f['error'] ) ) ) );
 			break;
 		case 'refresh_all':
 			iar_refresh_all();
+			$args = array( 'iar_refreshed' => '*' );
 			break;
 	}
-	wp_safe_redirect( add_query_arg( 'iar_done', 1, iar_following_admin_url() ) );
+	wp_safe_redirect( add_query_arg( $args, iar_following_admin_url() ) );
 	exit;
 } );
 
@@ -327,6 +391,7 @@ add_action( 'template_redirect', function () {
 }, 0 );
 
 function iar_render_following_page() {
+	iar_dedupe_following();
 	$all = iar_following();
 	uasort( $all, function ( $a, $b ) {
 		return ( $b['added'] ?? 0 ) <=> ( $a['added'] ?? 0 );
@@ -339,6 +404,10 @@ function iar_render_following_page() {
 
 		<?php if ( isset( $_GET['iar_error'] ) ) : // phpcs:ignore ?>
 			<div class="notice notice-error is-dismissible"><p><?php echo esc_html( wp_unslash( rawurldecode( $_GET['iar_error'] ) ) ); // phpcs:ignore ?></p></div>
+		<?php elseif ( isset( $_GET['iar_unfollowed'] ) ) : // phpcs:ignore ?>
+			<div class="notice notice-success is-dismissible"><p><?php printf( esc_html__( 'Unfollowed @%s.', 'instapress-social' ), esc_html( sanitize_user( rawurldecode( wp_unslash( $_GET['iar_unfollowed'] ) ), true ) ) ); // phpcs:ignore ?></p></div>
+		<?php elseif ( isset( $_GET['iar_refreshed'] ) ) : // phpcs:ignore ?>
+			<div class="notice notice-success is-dismissible"><p><?php echo '*' === $_GET['iar_refreshed'] ? esc_html__( 'Refreshed everyone you follow.', 'instapress-social' ) : esc_html( sprintf( __( 'Refreshed @%s.', 'instapress-social' ), sanitize_user( rawurldecode( wp_unslash( $_GET['iar_refreshed'] ) ), true ) ) ); // phpcs:ignore ?></p></div>
 		<?php elseif ( isset( $_GET['iar_followed'] ) ) : // phpcs:ignore ?>
 			<div class="notice notice-success is-dismissible"><p><?php printf( esc_html__( 'You\'re now following @%s.', 'instapress-social' ), esc_html( sanitize_user( rawurldecode( $_GET['iar_followed'] ), true ) ) ); // phpcs:ignore ?></p></div>
 		<?php endif; ?>
