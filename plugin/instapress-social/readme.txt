@@ -4,7 +4,7 @@ Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.25.2
+Stable tag: 1.26.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -17,16 +17,19 @@ An instapress-social archive of your own posts — and a feed of the people you 
 * Profile grid at /social/ (posts + reels tabs, hover counts, load more) and a single post page with carousel.
 * Per-post aspect ratio — Auto, 1:1, 4:5, 3:4, 1.91:1, 9:16 or Original. Auto uses the first image, kept within 4:5…1.91:1; every carousel slide is cropped to the post's ratio.
 * Grid tiles square (classic) or 3:4 / 4:5 portrait (Settings).
-* Following: the Follow button on a profile copies its feed link (/social/feed/). Paste it into instapress-social → Following on your own site and their posts appear in your home feed at /social/home/, refreshed hourly.
+* Following: the Follow button on someone's profile asks for your own site's address and opens your Following page with them filled in, ready to confirm (or copies their feed link, /social/feed/). Their posts then appear in your home feed at /social/home/, refreshed hourly.
 * Likes and comments on WordPress's own comment system: Instagram-style comment panel with replies, moderation/Akismet/notifications as usual; likes for visitors without accounts (one per browser), double-tap to like.
 * Stories: photos/videos that disappear after 24 hours (configurable), shown in a full-screen viewer from your profile picture and the home feed's stories row. They're shared with followers through the same feed, and expired stories are archived privately (or deleted).
 * "Get instapress-social" button: visitors can download the exact plugin version installed on your site.
 * Hashtags link to your own grid filtered by tag (/social/?hashtag=film); @mentions link to people you follow.
-* Updates from GitHub Releases: "Update now" and "Enable auto-updates" on the Plugins screen work as for any plugin (WordPress 5.8+).
+* Updates from GitHub Releases: "Update now" and "Enable auto-updates" on the Plugins screen work as for any plugin (WordPress 5.8+). (Pro)
+* Bot protection: Cloudflare Turnstile, Google reCAPTCHA v3 or v2 (invisible) on comments and likes, verified on the server. (Pro)
 * Settings → instapress-social for the profile header (picture, username, bio, website, follower counts).
 * WP-CLI importer.
 
 Requires Advanced Custom Fields (free or Pro) to edit fields in the admin.
+
+instapress-social comes in two editions: the free edition on WordPress.org, and instapress-social Pro from GitHub, which adds the features marked (Pro) and updates itself from GitHub Releases.
 
 == Importing ==
 
@@ -42,20 +45,36 @@ Re-running updates captions/dates without duplicating anything.
 
 Copy any file from the plugin's templates/ folder into your theme at instapress-social/<same path> to customise it, e.g. instapress-social/parts/grid-item.php.
 
-Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use_templates.
+Filters: iar_archive_slug (default "social"), iar_post_slug (default "p"), iar_use_templates.
 
 == Privacy ==
 
-The plugin shares anonymous usage statistics with its author through Google Analytics, to count installs and decide what to improve:
+With usage statistics switched on — off by default in the WordPress.org edition, on by default in instapress-social Pro — the plugin shares anonymous usage statistics with its author through Google Analytics, to count installs and decide what to improve:
 
 * When it's set up (activated, or first run after updating): one "plugin_setup" event.
 * In wp-admin: which instapress-social screens are opened (posts, editor, stories, Import, Following, Settings) and which actions are used — settings saved (the names of the settings that changed, not their values), following or unfollowing a feed, starting or cancelling an import, checking for updates, publishing from the composer (post, text or story), and changing a post's status.
 
 Every event carries this site's domain, the plugin and WordPress versions and the environment type (production, staging, local). Never post content, settings values, users or visitors. To send them, the plugin first reads the Analytics details from blog.islayanderson.co.uk (a plain request; nothing about your site is included).
 
-Turn it off under Settings → instapress-social → Privacy ("Share anonymous usage statistics"), with `define( 'IAR_DISABLE_SETUP_EVENT', true );` in wp-config.php, or by returning false from the `iar_send_usage_stats` filter.
+Turn it on or off under Settings → instapress-social → Privacy ("Share anonymous usage statistics"), with `define( 'IAR_DISABLE_SETUP_EVENT', true );` in wp-config.php, or by returning false from the `iar_send_usage_stats` filter.
+
+== External services ==
+
+* Google Analytics (Measurement Protocol) — only while usage statistics are switched on (Settings → instapress-social → Privacy). Sends the events listed under Privacy: this site's domain, plugin/WordPress versions, environment type, and names of admin screens and actions. Terms: https://marketingplatform.google.com/about/analytics/terms/us/ — Privacy policy: https://policies.google.com/privacy
+* blog.islayanderson.co.uk (the plugin author's site) — only while usage statistics are switched on: the plugin reads the Google Analytics details from https://blog.islayanderson.co.uk/wp-json/instapress/v1/ga-secret before sending. Nothing about your site is included in that request. Privacy policy: https://blog.islayanderson.co.uk/
+* Other instapress-social sites you follow — your site fetches their public feeds (e.g. https://their-site.com/social/feed/) hourly, and when you follow someone. Only their public posts and profile are read.
+* imginn.com — the Import page's bookmarklet runs in your own browser on imginn.com when you click it there, to save your public posts as posts.json. The plugin itself never contacts imginn. Terms and privacy: https://imginn.com/
+* Gravatar (Automattic), through WordPress — comment avatars, as on any WordPress site. Privacy policy: https://automattic.com/privacy/
+* Cloudflare Turnstile — only if you choose it for bot protection: loads https://challenges.cloudflare.com/turnstile/v0/api.js for visitors who comment or like, and checks their token with Cloudflare. Terms: https://www.cloudflare.com/website-terms/ — Privacy policy: https://www.cloudflare.com/privacypolicy/ (Pro)
+* Google reCAPTCHA — only if you choose it for bot protection: loads https://www.google.com/recaptcha/api.js and checks visitors' tokens with Google. Terms: https://policies.google.com/terms — Privacy policy: https://policies.google.com/privacy (Pro)
+* GitHub — instapress-social Pro checks https://api.github.com/repos/IslayAnderson/instapress-social/releases/latest for updates and downloads them from GitHub. Terms: https://docs.github.com/site-policy/github-terms/github-terms-of-service — Privacy policy: https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement (Pro)
 
 == Changelog ==
+
+= 1.26.0 =
+* Two editions: instapress-social (WordPress.org) and instapress-social Pro (GitHub). Pro adds bot protection (Cloudflare Turnstile / Google reCAPTCHA) and updates itself from GitHub Releases. Everything else is in both.
+* Usage statistics are opt-in in the WordPress.org edition (off until you switch them on under Settings → Privacy) and stay on by default in Pro.
+* Sites already running the plugin are on Pro: this update keeps their bot protection, settings and automatic updates as they are.
 
 = 1.25.2 =
 * Plugin Check clean-up: translator comments on every translatable string with placeholders; the RSS feed escapes through esc_xml() directly; file operations (import jobs, the download package, imported media dates) use WordPress's filesystem API instead of PHP's unlink/rmdir/rename/touch/move_uploaded_file; request values are sanitised where they're read; templates/parts/sprite.php blocks direct access; readme gains "Tested up to".

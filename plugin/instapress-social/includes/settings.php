@@ -25,7 +25,7 @@ function iar_defaults() {
 		'hide_admin_bar'  => 1,
 		'private_home'    => 1,
 		'private_follows' => 0,
-		'usage_stats'     => 1,
+		'usage_stats'     => IAR_PRO ? 1 : 0, // WordPress.org edition: opt-in
 		'share_plugin'    => 1,
 		'allow_comments'  => 1,
 		'allow_likes'     => 1,
@@ -295,7 +295,11 @@ function iar_render_settings() {
 				</tr>
 			</table>
 
-			<?php iar_render_captcha_settings( $s, $name ); ?>
+			<?php
+			if ( function_exists( 'iar_render_captcha_settings' ) ) { // Pro
+				iar_render_captcha_settings( $s, $name );
+			}
+			?>
 
 			<?php submit_button(); ?>
 		</form>

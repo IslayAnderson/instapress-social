@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name:       instapress-social
+ * Plugin Name:       instapress-social Pro
  * Description:       Your own instapress-social profile on WordPress: profile grid and post pages, short-code permalinks (/p/DYLRvc7CC0h/), aspect ratios, following other instapress-social sites with a home feed, and a WP-CLI importer.
- * Version:           1.25.2
+ * Version:           1.26.0
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Islay Anderson
@@ -31,9 +31,11 @@ if ( function_exists( 'igp_generate_shortcode' ) || defined( 'IGP_POST_TYPE' ) )
 	return;
 }
 
-define( 'IAR_VERSION', '1.25.2' );
+define( 'IAR_VERSION', '1.26.0' );
 define( 'IAR_FILE', __FILE__ );
 define( 'IAR_DIR', plugin_dir_path( __FILE__ ) );
+// Pro edition: includes/pro/ is present (bot protection, GitHub updates). The WordPress.org build leaves it out (bin/build.sh).
+define( 'IAR_PRO', is_dir( IAR_DIR . 'includes/pro' ) );
 define( 'IAR_URL', plugin_dir_url( __FILE__ ) );
 
 /** Post type + field names. The importer, templates and editor button all use these. */
@@ -62,11 +64,15 @@ require IAR_DIR . 'includes/feed-out.php';
 require IAR_DIR . 'includes/following.php';
 require IAR_DIR . 'includes/stories.php';
 require IAR_DIR . 'includes/engagement.php';
-require IAR_DIR . 'includes/bot-check.php';
 require IAR_DIR . 'includes/text-posts.php';
 require IAR_DIR . 'includes/post-status.php';
 require IAR_DIR . 'includes/compose.php';
-require IAR_DIR . 'includes/updater.php';
+foreach ( array( 'bot-check', 'updater' ) as $iar_pro_file ) {
+	if ( IAR_PRO && is_file( IAR_DIR . 'includes/pro/' . $iar_pro_file . '.php' ) ) {
+		require IAR_DIR . 'includes/pro/' . $iar_pro_file . '.php';
+	}
+}
+unset( $iar_pro_file );
 require IAR_DIR . 'includes/download.php';
 require IAR_DIR . 'includes/class-importer.php';
 require IAR_DIR . 'includes/import-page.php';

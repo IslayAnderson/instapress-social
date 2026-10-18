@@ -28,6 +28,26 @@ import/                      your posts.json + downloaded media (git-ignored)
 - **Your own addresses**: change the profile folder (`/social/`) and post folder (`/p/`) in Settings; old addresses redirect.
 - **Settings → instapress-social**: profile picture, username, bio, website, counts, grid, templates, sharing.
 
+## Editions
+
+One source tree, two plugins (both install as `instapress-social/`):
+
+| | instapress-social Pro | instapress-social (WordPress.org) |
+| --- | --- | --- |
+| Where | GitHub Releases: `instapress-social-X.Y.Z.zip` | `instapress-social-wporg-X.Y.Z.zip`, for the WordPress.org SVN |
+| Bot protection (Turnstile / reCAPTCHA) | ✓ | — |
+| Updates | itself, from GitHub Releases | WordPress.org |
+| Usage statistics | on by default | opt-in |
+| Everything else | ✓ | ✓ |
+
+Pro-only code lives in `plugin/instapress-social/includes/pro/`; the plugin loads it when it's there (`IAR_PRO`). Build both zips from a tag:
+
+```bash
+bin/build.sh v1.26.0
+```
+
+The WordPress.org build drops `includes/pro/`, the `Update URI` header and readme lines ending in "(Pro)". Installed copies update from the asset named `instapress-social-X.Y.Z.zip`, so that name always carries the Pro build.
+
 ## Importing from imginn
 
 1. In WordPress go to *instapress-social → Import* and drag the **imginn → posts.json** bookmarklet to your bookmarks bar. Open your profile on imginn.com, pass the check and click the bookmark — a progress box appears and `posts.json` downloads. (Fallback: paste `plugin/instapress-social/tools/imginn-scrape.js` into DevTools → Console.)

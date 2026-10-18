@@ -186,9 +186,11 @@ add_action( 'wp_enqueue_scripts', function () {
 		'people'      => iar_known_people(),
 		'ajax'        => admin_url( 'admin-ajax.php' ),
 		'likes'       => iar_likes_enabled(),
-		'captcha'     => iar_captcha_client_config(),
+		'captcha'     => function_exists( 'iar_captcha_client_config' ) ? iar_captcha_client_config() : null, // Pro
 	) );
-	iar_captcha_enqueue();
+	if ( function_exists( 'iar_captcha_enqueue' ) ) { // Pro
+		iar_captcha_enqueue();
+	}
 	if ( iar_is_compose() ) {
 		wp_enqueue_script( 'instapress-social-compose', IAR_URL . 'assets/js/compose.js', array(), IAR_VERSION, true );
 	}
