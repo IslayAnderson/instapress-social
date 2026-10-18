@@ -500,6 +500,9 @@ body.email-modal-open { overflow: hidden; }
 .email-modal__check { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; font-size: 13px; }
 .email-modal__error { margin: 0 0 12px; font-size: 13px; color: #ed4956; }
 .email-modal__actions { display: flex; justify-content: flex-end; gap: 8px; }
+.follow-modal__alt { margin: 16px 0 0; font-size: 13px; color: var(--text-muted); text-align: center; }
+.follow-modal__alt a, .follow-modal__copy { color: var(--accent); font-size: inherit; padding: 0; text-decoration: none; }
+.follow-modal__copy:hover, .follow-modal__alt a:hover { text-decoration: underline; }
 
 /* Turnstile: invisible unless Cloudflare asks for a check, then shown above everything. */
 .ts-challenge { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 500; }

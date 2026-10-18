@@ -312,6 +312,20 @@ function iar_following_admin_url() {
 	return admin_url( 'edit.php?post_type=' . IAR_POST_TYPE . '&page=iar-following' );
 }
 
+/*
+ * The Follow button on someone else's profile opens <this site>/?iar_follow=<their feed>
+ * in a new tab. Pass it on to the Following page (WordPress asks you to log in first if
+ * needed), where it's filled in for you to confirm. Nothing is followed without that click.
+ */
+add_action( 'template_redirect', function () {
+	if ( empty( $_GET['iar_follow'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		return;
+	}
+	$feed = iar_clean_url( wp_unslash( $_GET['iar_follow'] ) ); // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput
+	wp_safe_redirect( $feed ? add_query_arg( 'follow', rawurlencode( $feed ), iar_following_admin_url() ) : iar_following_admin_url() );
+	exit;
+}, 0 );
+
 function iar_render_following_page() {
 	$all = iar_following();
 	uasort( $all, function ( $a, $b ) {
@@ -329,13 +343,45 @@ function iar_render_following_page() {
 			<div class="notice notice-success is-dismissible"><p><?php printf( esc_html__( 'You\'re now following @%s.', 'instapress-social' ), esc_html( sanitize_user( rawurldecode( $_GET['iar_followed'] ), true ) ) ); // phpcs:ignore ?></p></div>
 		<?php endif; ?>
 
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:16px 0 24px;max-width:720px;">
+		<?php
+		// Arrived from a Follow button elsewhere (?follow=<feed>): show who it is, ready to confirm.
+		$prefill = isset( $_GET['follow'] ) ? iar_clean_url( wp_unslash( rawurldecode( $_GET['follow'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput
+		if ( $prefill ) :
+			$preview = iar_resolve_feed( $prefill );
+			$preview = is_wp_error( $preview ) ? $preview : iar_parse_feed( $preview[1], $preview[0] );
+			?>
+			<?php if ( is_wp_error( $preview ) ) : ?>
+				<div class="notice notice-error"><p><?php echo esc_html( sprintf( __( 'Couldn\'t load that profile: %s', 'instapress-social' ), $preview->get_error_message() ) ); ?></p></div>
+			<?php else : ?>
+				<?php
+				$who     = $preview[0];
+				$already = isset( $all[ iar_follow_id( $who['feed'] ) ] ) || isset( $all[ iar_follow_id( $prefill ) ] );
+				?>
+				<div class="notice <?php echo $already ? 'notice-success' : 'notice-info'; ?>" style="display:flex;align-items:center;gap:12px;padding:12px;">
+					<?php if ( $who['avatar'] ) : ?>
+						<img src="<?php echo esc_url( $who['avatar'] ); ?>" alt="" width="48" height="48" style="border-radius:50%;object-fit:cover;flex:none;">
+					<?php endif; ?>
+					<p style="margin:0;">
+						<?php if ( $already ) : ?>
+							<?php printf( esc_html__( 'You already follow @%s.', 'instapress-social' ), esc_html( $who['username'] ) ); ?>
+						<?php else : ?>
+							<strong><?php printf( esc_html__( 'Follow @%s?', 'instapress-social' ), esc_html( $who['username'] ) ); ?></strong>
+							<?php echo $who['name'] ? ' ' . esc_html( $who['name'] ) . ' · ' : ' '; ?>
+							<a href="<?php echo esc_url( $who['profile'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( wp_parse_url( $who['profile'], PHP_URL_HOST ) ); ?></a><br>
+							<?php esc_html_e( 'Press Follow below to add them to your home feed.', 'instapress-social' ); ?>
+						<?php endif; ?>
+					</p>
+				</div>
+			<?php endif; ?>
+		<?php endif; ?>
+
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:16px 0 24px;max-width:720px;"<?php echo $prefill ? ' id="iar-follow-confirm"' : ''; ?>>
 			<?php wp_nonce_field( 'iar_follow' ); ?>
 			<input type="hidden" name="action" value="iar_follow">
 			<label for="iar-feed" style="display:block;font-weight:600;margin-bottom:6px;"><?php esc_html_e( 'Follow someone', 'instapress-social' ); ?></label>
 			<div style="display:flex;gap:8px;">
-				<input type="url" id="iar-feed" name="feed" class="regular-text" style="flex:1;" required placeholder="https://their-site.com/social/feed/">
-				<?php submit_button( __( 'Follow', 'instapress-social' ), 'primary', 'submit', false ); ?>
+				<input type="url" id="iar-feed" name="feed" class="regular-text" style="flex:1;" required placeholder="https://their-site.com/social/feed/" value="<?php echo esc_attr( $prefill ); ?>">
+				<?php submit_button( __( 'Follow', 'instapress-social' ), 'primary', 'submit', false, $prefill ? array( 'autofocus' => 'autofocus' ) : null ); ?>
 			</div>
 			<p class="description"><?php esc_html_e( 'Paste the link copied from the Follow button on their profile — or just their profile link.', 'instapress-social' ); ?></p>
 		</form>

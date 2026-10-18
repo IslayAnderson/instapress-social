@@ -39,7 +39,7 @@ iar_template_part( 'header' );
 					<div class="profile__row">
 						<h1 class="profile__username"><?php echo esc_html( $iar['username'] ); ?></h1>
 						<div class="profile__actions">
-							<button type="button" class="btn btn--primary" data-follow="<?php echo esc_url( iar_feed_url() ); ?>" data-copied="<?php esc_attr_e( 'Link copied — paste it into instapress-social → Following on your WordPress site.', 'instapress-social' ); ?>"><?php esc_html_e( 'Follow', 'instapress-social' ); ?></button>
+							<button type="button" class="btn btn--primary" data-follow="<?php echo esc_url( iar_feed_url() ); ?>" data-copied="<?php esc_attr_e( 'Link copied — paste it into instapress-social → Following on your WordPress site.', 'instapress-social' ); ?>" aria-haspopup="dialog"><?php esc_html_e( 'Follow', 'instapress-social' ); ?></button>
 							<?php if ( $iar['website'] ) : ?>
 								<a class="btn" href="<?php echo esc_url( $iar['website'] ); ?>"><?php esc_html_e( 'Website', 'instapress-social' ); ?></a>
 							<?php endif; ?>
@@ -113,5 +113,26 @@ iar_template_part( 'header' );
 				<p class="empty"><?php esc_html_e( 'No posts yet.', 'instapress-social' ); ?></p>
 			<?php endif; ?>
 		</div>
+<div class="email-modal follow-modal" data-follow-modal hidden role="dialog" aria-modal="true" aria-labelledby="iar-follow-title">
+	<form class="email-modal__box" data-follow-form novalidate>
+		<h2 id="iar-follow-title"><?php printf( esc_html__( 'Follow @%s', 'instapress-social' ), esc_html( $iar['username'] ) ); ?></h2>
+		<p class="email-modal__note"><?php esc_html_e( 'Enter the address of your own site with instapress-social. Its Following page opens in a new tab with this profile filled in, ready to follow.', 'instapress-social' ); ?></p>
+		<label class="email-modal__field"><?php esc_html_e( 'Your site', 'instapress-social' ); ?>
+			<input type="text" name="site" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="your-site.com" required>
+		</label>
+		<p class="email-modal__error" data-follow-error hidden></p>
+		<div class="email-modal__actions">
+			<button type="button" class="btn" data-follow-cancel><?php esc_html_e( 'Cancel', 'instapress-social' ); ?></button>
+			<button type="submit" class="btn btn--primary"><?php esc_html_e( 'Continue', 'instapress-social' ); ?></button>
+		</div>
+		<p class="follow-modal__alt">
+			<?php esc_html_e( 'No site of your own yet?', 'instapress-social' ); ?>
+			<?php if ( iar_setting( 'share_plugin' ) ) : ?>
+				<a href="<?php echo esc_url( iar_download_url() ); ?>" download><?php esc_html_e( 'Get instapress-social', 'instapress-social' ); ?></a> &middot;
+			<?php endif; ?>
+			<button type="button" class="follow-modal__copy" data-follow-copy><?php esc_html_e( 'Copy the feed link instead', 'instapress-social' ); ?></button>
+		</p>
+	</form>
+</div>
 <?php
 iar_template_part( 'footer' );

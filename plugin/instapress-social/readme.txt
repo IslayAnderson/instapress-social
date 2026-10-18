@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.24.1
+Stable tag: 1.25.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -55,6 +55,10 @@ Every event carries this site's domain, the plugin and WordPress versions and th
 Turn it off under Settings → instapress-social → Privacy ("Share anonymous usage statistics"), with `define( 'IAR_DISABLE_SETUP_EVENT', true );` in wp-config.php, or by returning false from the `iar_send_usage_stats` filter.
 
 == Changelog ==
+
+= 1.25.0 =
+* Following is one step now: the Follow button on a profile asks for your own site's address (remembered in your browser for next time) and opens your site's Following page in a new tab, with that profile filled in and shown (picture, name, site). Press Follow to confirm — nothing is followed without that click. If you're logged out, your site asks you to log in first.
+* Your site needs 1.25.0 or later for the link to land on its Following page. The dialog still offers "Copy the feed link instead", and a "Get instapress-social" link for visitors without a site.
 
 = 1.24.1 =
 * Fixed: the + on your story ring in the home feed stretched to the full width of the story instead of being a small round button.

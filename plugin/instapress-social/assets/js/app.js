@@ -620,6 +620,33 @@
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('[data-follow]');
     if (!btn) return;
+    openFollow(btn);
+  });
+
+  /* ----------------------------------------------------------------------
+     Follow: ask for the visitor's own instapress-social site, then open
+     <their site>/?iar_follow=<this feed> in a new tab — their plugin takes
+     it to its Following page with this profile filled in, ready to confirm.
+     ---------------------------------------------------------------------- */
+  var followModal = document.querySelector('[data-follow-modal]'), followBtn = null;
+  var SITE_KEY = 'iar_my_site';
+
+  function storedSite() { try { return localStorage.getItem(SITE_KEY) || ''; } catch (err) { return ''; } }
+  function storeSite(v) { try { localStorage.setItem(SITE_KEY, v); } catch (err) {} }
+
+  // "my-site.com", "https://my-site.com/social/", … → "https://my-site.com/social", or null.
+  function siteBase(input) {
+    var v = String(input || '').trim();
+    if (!v) return null;
+    if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
+    try {
+      var u = new URL(v);
+      if (!/\./.test(u.hostname) && u.hostname !== 'localhost') return null;
+      return u.origin + u.pathname.replace(/\/+$/, '');
+    } catch (err) { return null; }
+  }
+
+  function copyFeed(btn) {
     var url = btn.dataset.follow;
     copyText(url).then(function () {
       toast(btn.dataset.copied);
@@ -627,7 +654,43 @@
     }, function () {
       window.prompt('Copy this link and paste it into Following on your site:', url);
     });
-  });
+  }
+
+  function openFollow(btn) {
+    if (!followModal) { copyFeed(btn); return; } // older templates without the dialog
+    followBtn = btn;
+    var form = followModal.querySelector('[data-follow-form]');
+    form.elements.site.value = storedSite();
+    followModal.querySelector('[data-follow-error]').hidden = true;
+    followModal.hidden = false;
+    document.body.classList.add('email-modal-open');
+    form.elements.site.focus();
+    form.elements.site.select();
+  }
+
+  function closeFollow() {
+    if (!followModal || followModal.hidden) return;
+    followModal.hidden = true;
+    document.body.classList.remove('email-modal-open');
+    if (followBtn) followBtn.focus();
+  }
+
+  if (followModal) {
+    followModal.addEventListener('click', function (e) {
+      if (e.target === followModal || e.target.closest('[data-follow-cancel]')) closeFollow();
+      if (e.target.closest('[data-follow-copy]') && followBtn) { closeFollow(); copyFeed(followBtn); }
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !followModal.hidden) closeFollow(); });
+    followModal.querySelector('[data-follow-form]').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var base = siteBase(this.elements.site.value), err = followModal.querySelector('[data-follow-error]');
+      if (!base) { err.textContent = 'Enter your site\'s address, like your-site.com.'; err.hidden = false; return; }
+      if (followBtn && new URL(base).host === location.host) { err.textContent = 'That\'s this site — enter your own site\'s address.'; err.hidden = false; return; }
+      storeSite(base.replace(/^https:\/\//, ''));
+      window.open(base + '/?iar_follow=' + encodeURIComponent(followBtn.dataset.follow), '_blank', 'noopener');
+      closeFollow();
+    });
+  }
 
   // Long captions in the home feed: "… more".
   document.addEventListener('click', function (e) {
