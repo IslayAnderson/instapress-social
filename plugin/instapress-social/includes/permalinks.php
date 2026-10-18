@@ -97,7 +97,7 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 	wp_enqueue_script( 'iar-generate', IAR_URL . 'assets/js/admin-generate.js', array(), IAR_VERSION, true );
 	wp_localize_script( 'iar-generate', 'IGP', array(
 		'epoch'   => IAR_EPOCH_MS,
-		'base'    => home_url( '/' . apply_filters( 'iar_post_slug', 'p' ) . '/' ),
+		'base'    => home_url( '/' . iar_post_slug() . '/' ),
 		'field'   => IAR_FIELDS['shortcode'],
 		'confirm' => __( "This post already has the shortcode \"%s\".\nReplace it (and the slug) with a new one?", 'instapress-social' ),
 	) );

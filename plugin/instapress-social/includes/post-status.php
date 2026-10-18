@@ -95,7 +95,7 @@ add_action( 'wp_ajax_iar_set_status', function () {
 // Drafts keep their /p/<shortcode>/ address (WordPress would give them ?p=123); editors can open it.
 add_filter( 'post_type_link', function ( $link, $post ) {
 	if ( IAR_POST_TYPE === $post->post_type && $post->post_name && in_array( $post->post_status, array( 'draft', 'pending', 'future' ), true ) && get_option( 'permalink_structure' ) ) {
-		return home_url( user_trailingslashit( apply_filters( 'iar_post_slug', 'p' ) . '/' . $post->post_name ) );
+		return home_url( user_trailingslashit( iar_post_slug() . '/' . $post->post_name ) );
 	}
 	return $link;
 }, 10, 2 );

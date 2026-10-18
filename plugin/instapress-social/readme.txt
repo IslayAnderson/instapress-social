@@ -3,7 +3,7 @@ Contributors: islayanderson
 Tags: instapress-social, archive, gallery, import, social
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.18.0
+Stable tag: 1.19.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -48,6 +48,10 @@ Filters: iar_archive_slug (default "gram"), iar_post_slug (default "p"), iar_use
 When the plugin is set up (activated, or first run after updating), it sends one "plugin_setup" event to the plugin author's Google Analytics, so they know roughly how many sites use it. To send it, the plugin first reads the Analytics details from blog.islayanderson.co.uk (a plain request; nothing about your site is included). It contains the site's domain, the plugin and WordPress versions and the environment type (production, staging, local) — nothing about your visitors, posts or users. To turn it off, add `define( 'IAR_DISABLE_SETUP_EVENT', true );` to wp-config.php, or return false from the `iar_send_setup_event` filter.
 
 == Changelog ==
+
+= 1.19.0 =
+* Choose your own addresses: Settings → instapress-social now has a Profile folder (default /gram/, which also holds …/home/ and …/new/) and a Post folder (default /p/). Lowercase letters, numbers and dashes; names WordPress already uses and your existing pages are refused, with a message saying why.
+* Changing a folder doesn't break links: the old addresses redirect permanently (301) to the new ones, including old post links and links on sites that follow you.
 
 = 1.18.0 =
 * Text posts: write a short post with rich text (bold, italic, underline, strikethrough, headings, quotes, lists, links) and give it a look: text size, font, alignment, text colour and a background from preset colours and gradients (or your own colour). Make them from the composer's new Text tab or in wp-admin (Media type: Text). They're ordinary posts (permalinks, grid, likes, comments, feeds) drawn as SVG with real text, not baked into an image. Followers' sites and RSS readers get the card as an .svg file.

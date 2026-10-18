@@ -15,7 +15,7 @@ function iar_is_view() {
  * ---------------------------------------------------------------------- */
 
 function iar_home_url( $page = 1 ) {
-	$url = home_url( '/' . apply_filters( 'iar_archive_slug', 'gram' ) . '/home/' );
+	$url = home_url( '/' . iar_archive_slug() . '/home/' );
 	return $page > 1 ? add_query_arg( 'pg', (int) $page, $url ) : $url;
 }
 
@@ -24,7 +24,7 @@ function iar_is_home() {
 }
 
 add_action( 'init', function () {
-	add_rewrite_rule( '^' . preg_quote( apply_filters( 'iar_archive_slug', 'gram' ), '/' ) . '/home/?$', 'index.php?iar_home=1', 'top' );
+	add_rewrite_rule( '^' . preg_quote( iar_archive_slug(), '/' ) . '/home/?$', 'index.php?iar_home=1', 'top' );
 } );
 
 add_filter( 'query_vars', function ( $vars ) {

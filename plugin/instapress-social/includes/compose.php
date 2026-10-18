@@ -12,7 +12,7 @@
 defined( 'ABSPATH' ) || exit;
 
 function iar_compose_url( $kind = 'post' ) {
-	$url = home_url( '/' . apply_filters( 'iar_archive_slug', 'gram' ) . '/new/' );
+	$url = home_url( '/' . iar_archive_slug() . '/new/' );
 	return 'story' === $kind ? add_query_arg( 'type', 'story', $url ) : $url;
 }
 
@@ -26,7 +26,7 @@ function iar_is_compose() {
 }
 
 add_action( 'init', function () {
-	add_rewrite_rule( '^' . preg_quote( apply_filters( 'iar_archive_slug', 'gram' ), '/' ) . '/new/?$', 'index.php?iar_new=1', 'top' );
+	add_rewrite_rule( '^' . preg_quote( iar_archive_slug(), '/' ) . '/new/?$', 'index.php?iar_new=1', 'top' );
 } );
 
 add_filter( 'query_vars', function ( $vars ) {

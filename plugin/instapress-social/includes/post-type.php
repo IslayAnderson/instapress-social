@@ -15,9 +15,9 @@ function iar_register_post_type() {
 			'all_items'     => __( 'All Posts', 'instapress-social' ),
 		),
 		'public'       => true,
-		// Archive at /gram/, posts at /p/<shortcode>/ — change with the filters.
-		'has_archive'  => apply_filters( 'iar_archive_slug', 'gram' ),
-		'rewrite'      => array( 'slug' => apply_filters( 'iar_post_slug', 'p' ), 'with_front' => false ),
+		// Archive at /gram/, posts at /p/<shortcode>/ — both folders are settings (includes/addresses.php).
+		'has_archive'  => iar_archive_slug(),
+		'rewrite'      => array( 'slug' => iar_post_slug(), 'with_front' => false ),
 		'menu_icon'    => 'dashicons-camera',
 		'supports'     => array( 'title', 'thumbnail', 'custom-fields' ),
 		'show_in_rest' => true,

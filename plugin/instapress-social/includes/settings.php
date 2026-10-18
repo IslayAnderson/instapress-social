@@ -16,6 +16,8 @@ function iar_defaults() {
 		'avatar_id'       => 0,
 		'followers'       => '',
 		'following'       => '',
+		'archive_slug'    => 'gram',
+		'post_slug'       => 'p',
 		'per_page'        => 24,
 		'grid_ratio'      => '1:1',
 		'use_templates'   => 1,
@@ -55,7 +57,7 @@ add_action( 'admin_init', function () {
 		'type'              => 'array',
 		'sanitize_callback' => function ( $in ) {
 			$in = (array) $in;
-			return array(
+			return iar_sanitize_slugs( $in ) + array(
 				'username'       => sanitize_user( $in['username'] ?? '', true ),
 				'name'           => sanitize_text_field( $in['name'] ?? '' ),
 				'bio'            => sanitize_textarea_field( $in['bio'] ?? '' ),
@@ -203,6 +205,23 @@ function iar_render_settings() {
 					<td>
 						<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[share_plugin]" value="1" <?php checked( $s['share_plugin'] ); ?>> <?php esc_html_e( 'Show a "Get instapress-social" button so visitors can download this plugin and follow you back', 'instapress-social' ); ?></label>
 						<p class="description"><?php printf( esc_html__( 'Downloads the version installed here (%s).', 'instapress-social' ), esc_html( IAR_VERSION ) ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="iar-archive-slug"><?php esc_html_e( 'Profile folder', 'instapress-social' ); ?></label></th>
+					<td>
+						<code><?php echo esc_html( untrailingslashit( home_url() ) ); ?>/</code><input type="text" id="iar-archive-slug" class="regular-text" style="width:12em" name="<?php echo esc_attr( $name ); ?>[archive_slug]" value="<?php echo esc_attr( $s['archive_slug'] ); ?>" pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="40" spellcheck="false" autocapitalize="off"><code>/</code>
+						<p class="description"><?php esc_html_e( 'Where your profile lives; your home feed and New post page sit inside it (…/home/, …/new/).', 'instapress-social' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="iar-post-slug"><?php esc_html_e( 'Post folder', 'instapress-social' ); ?></label></th>
+					<td>
+						<code><?php echo esc_html( untrailingslashit( home_url() ) ); ?>/</code><input type="text" id="iar-post-slug" class="regular-text" style="width:12em" name="<?php echo esc_attr( $name ); ?>[post_slug]" value="<?php echo esc_attr( $s['post_slug'] ); ?>" pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="40" spellcheck="false" autocapitalize="off"><code>/<?php echo esc_html( 'DYLRvc7CC0h' ); ?>/</code>
+						<p class="description"><?php esc_html_e( 'Where each post lives. Lowercase letters, numbers and dashes. If you change either folder, the old addresses redirect to the new ones, so existing links keep working.', 'instapress-social' ); ?></p>
+						<?php if ( has_filter( 'iar_archive_slug' ) || has_filter( 'iar_post_slug' ) ) : ?>
+							<p class="description"><strong><?php esc_html_e( 'Code on this site overrides these folders (the iar_archive_slug / iar_post_slug filters).', 'instapress-social' ); ?></strong></p>
+						<?php endif; ?>
 					</td>
 				</tr>
 				<tr>

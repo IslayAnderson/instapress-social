@@ -25,6 +25,7 @@ import/                      your posts.json + downloaded media (git-ignored)
 - **Post menu**: logged in, the ⋯ on a post changes who can see it (Published / Private / Draft), bins it, or opens the editor.
 - **Stories**: photos/videos that disappear after 24h, played full-screen from your profile picture and the home feed's stories row; followers get them through the same feed.
 - **Get instapress-social**: a profile button that downloads the plugin version installed on the site (`/?download=instapress-social`).
+- **Your own addresses**: change the profile folder (`/gram/`) and post folder (`/p/`) in Settings; old addresses redirect.
 - **Settings → instapress-social**: profile picture, username, bio, website, counts, grid, templates, sharing.
 
 ## Importing from imginn
