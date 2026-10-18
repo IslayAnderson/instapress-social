@@ -1,5 +1,5 @@
 /**
- * Insta-style theme — front-end behaviour.
+ * instopress-social — front-end behaviour.
  *
  * Grid items carry their post data as data-* attributes so the modal can be
  * built without an extra request. In WordPress, the loop prints the same
